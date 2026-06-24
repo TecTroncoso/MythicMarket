@@ -1,0 +1,8 @@
+{
+  "name": "Mythic Market",
+  "description": "A top-up store for Mobile Legends diamonds and passes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
