@@ -42,3 +42,7 @@ env/
 
 # scripts locales del usuario
 abrir_proyecto.bat
+
+# IDE y Herramientas locales
+.vscode/
+.atl/
