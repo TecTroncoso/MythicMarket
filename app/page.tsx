@@ -1,9 +1,11 @@
 import Image from 'next/image';
 import { Zap, HelpCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
-import { CheckoutSection } from '@/components/CheckoutSection';
-import { ReviewsSection } from '@/components/ReviewsSection';
 import { auth } from '@/auth';
+import dynamic from 'next/dynamic';
+
+const CheckoutSection = dynamic(() => import('@/components/CheckoutSection').then(mod => mod.CheckoutSection));
+const ReviewsSection = dynamic(() => import('@/components/ReviewsSection').then(mod => mod.ReviewsSection));
 
 export default async function MobileLegendsStore() {
   const session = await auth();
