@@ -79,6 +79,7 @@ export function ReviewsSection() {
                 <button
                   key={star}
                   type="button"
+                  aria-label={`Calificar con ${star} estrellas`}
                   onClick={() => setNewReviewRating(star)}
                   className={`transition-colors ${star <= newReviewRating ? 'text-[#ffaa00]' : 'text-gray-600 hover:text-[#ffaa00]/70'}`}
                 >

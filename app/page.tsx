@@ -25,6 +25,7 @@ export default async function MobileLegendsStore() {
               height={200} 
               className="w-full h-auto drop-shadow-[0_0_20px_rgba(255,170,0,0.4)]" 
               referrerPolicy="no-referrer" 
+              priority
             />
           </div>
           <div className="text-center md:text-left">
