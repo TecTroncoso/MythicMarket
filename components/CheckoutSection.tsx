@@ -119,7 +119,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
                   }`}
                 >
                   {prod.bonus && (
-                    <div className="absolute top-0 right-0 bg-[#ff3300] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+                    <div className="absolute top-0 right-0 bg-[#c51f00] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
                       {prod.bonus}
                     </div>
                   )}
