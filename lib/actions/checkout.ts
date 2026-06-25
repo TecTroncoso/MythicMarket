@@ -30,7 +30,7 @@ export async function processCheckout(formData: FormData) {
   const validatedFields = CheckoutSchema.safeParse({ userId, zoneId, productId })
 
   if (!validatedFields.success) {
-    return { error: validatedFields.error.errors[0].message }
+    return { error: validatedFields.error.issues[0].message }
   }
 
   // 3. Verificar autoridad sobre el precio
