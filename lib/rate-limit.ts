@@ -17,7 +17,7 @@ try {
 // Fallback in-memory map para desarrollo si no hay Redis
 const cache = new Map();
 
-const getLimiter = (requests: number, windowStr: Parameters<typeof Ratelimit.slidingWindow>[0]) => {
+const getLimiter = (requests: number, windowStr: Parameters<typeof Ratelimit.slidingWindow>[1]) => {
   if (redisClient) {
     return new Ratelimit({
       redis: redisClient,
