@@ -23,9 +23,11 @@ export default async function MobileLegendsStore() {
               alt="Mobile Legends: Bang Bang" 
               width={200} 
               height={200} 
+              sizes="(max-width: 768px) 128px, 192px"
               className="w-full h-auto drop-shadow-[0_0_20px_rgba(255,170,0,0.4)]" 
               referrerPolicy="no-referrer" 
               priority
+              fetchPriority="high"
             />
           </div>
           <div className="text-center md:text-left">
