@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import Image from 'next/image';
-import { Info, ShoppingCart, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Info, ShoppingCart, ShieldCheck, ChevronRight, Loader2, Check } from 'lucide-react';
 import { processCheckout } from '@/lib/actions/checkout';
 
 const PRODUCTS = [
@@ -22,6 +22,56 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  type NicknameStatus =
+    | { kind: "idle" }
+    | { kind: "loading" }
+    | { kind: "success"; nickname: string; country: string }
+    | { kind: "warning" };
+  const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>({ kind: "idle" });
+
+  useEffect(() => {
+    const valid = /^\d{5,10}$/.test(userId) && /^\d{3,5}$/.test(zoneId);
+    if (!valid) {
+      // Defer setState out of the effect body to avoid cascading-render lint warning
+      // (we are intentionally resetting the displayed status when inputs become invalid).
+      queueMicrotask(() => setNicknameStatus({ kind: "idle" }));
+      return;
+    }
+    queueMicrotask(() => setNicknameStatus({ kind: "loading" }));
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/mlbb/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, zoneId }),
+          signal: controller.signal,
+        });
+        const data = (await res.json()) as {
+          success: boolean;
+          data?: { nickname: string; country: string };
+        };
+        if (res.ok && data.success && data.data?.nickname) {
+          setNicknameStatus({
+            kind: "success",
+            nickname: data.data.nickname,
+            country: data.data.country,
+          });
+        } else {
+          setNicknameStatus({ kind: "warning" });
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setNicknameStatus({ kind: "warning" });
+        }
+      }
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [userId, zoneId]);
 
   const handleCheckout = () => {
     setCheckoutError(null);
@@ -94,6 +144,26 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
             <p className="text-xs text-gray-400 leading-relaxed">
               Para encontrar tu User ID, haz clic en tu avatar en la esquina superior izquierda de la pantalla principal del juego. El ID y Zone ID estarán allí (ej. <span className="text-white font-mono bg-[#0a0f1a] px-1 rounded">12345678(1234)</span>).
             </p>
+          </div>
+          <div aria-live="polite" className="mt-4">
+            {nicknameStatus.kind === "loading" && (
+              <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <Loader2 className="w-4 h-4 animate-spin" aria-label="Verificando jugador" />
+                <span>Verificando jugador...</span>
+              </div>
+            )}
+            {nicknameStatus.kind === "success" && (
+              <div className="flex items-center gap-2 text-green-400 text-sm">
+                <Check className="w-4 h-4" />
+                <span className="font-medium">{nicknameStatus.nickname}</span>
+                <span className="text-gray-500">({nicknameStatus.country})</span>
+              </div>
+            )}
+            {nicknameStatus.kind === "warning" && (
+              <p role="status" className="text-gray-500 text-xs">
+                No pudimos verificar el nickname, pero podés continuar
+              </p>
+            )}
           </div>
         </section>
 
