@@ -9,6 +9,10 @@ import { eq } from "drizzle-orm"
 import { authConfig } from "./auth.config"
 import { LoginSchema } from "./lib/validations"
 
+// Re-exported so tests can mock @/auth as a single unit without
+// reaching into next-auth directly. Zero runtime impact.
+export { AuthError } from "next-auth"
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db),
   session: { strategy: "jwt" },
