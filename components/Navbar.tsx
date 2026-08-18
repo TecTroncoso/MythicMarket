@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Gamepad2, LogOut, User } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { auth } from '@/auth';
 import { SignOutButton } from './SignOutButton';
+import { BrandLogo } from './BrandLogo';
 
 export async function Navbar() {
   const session = await auth();
@@ -11,12 +12,7 @@ export async function Navbar() {
     <header className="sticky top-0 z-50 bg-[#121824]/90 backdrop-blur-md border-b border-[#2a3441] shadow-2xl">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-tr from-[#ffaa00] to-[#ff5d00] rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-12 transition-transform">
-            <Gamepad2 className="text-white w-6 h-6" />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
-            Mythic Market
-          </h1>
+          <BrandLogo size="sm" />
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-400">
           <Link href="/" className="hover:text-white transition-colors">Inicio</Link>
