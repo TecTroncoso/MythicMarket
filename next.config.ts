@@ -36,15 +36,18 @@ const nextConfig: NextConfig = {
         // Ignore Windows system files at drive root that cause EINVAL lstat
         // errors ("Watchpack Error: invalid argument, lstat 'C:\pagefile.sys'")
         // alongside the usual heavy build artefact dirs.
+        // RegExp ignores match against the FULL absolute path, so they also
+        // cover the drive root (C:\pagefile.sys) that webpack scans while
+        // walking up ancestor directories for config files.
         config.watchOptions = {
           ignored: [
-            '**/node_modules/**',
-            '**/.git/**',
-            '**/.next/**',
-            'pagefile.sys',
-            'hiberfil.sys',
-            'swapfile.sys',
-            'System Volume Information/**',
+            /node_modules/,
+            /\.git/,
+            /\.next/,
+            /pagefile\.sys/,
+            /hiberfil\.sys/,
+            /swapfile\.sys/,
+            /System Volume Information/,
           ],
         };
       }
