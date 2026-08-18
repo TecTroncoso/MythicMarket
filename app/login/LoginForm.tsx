@@ -36,8 +36,13 @@ export function LoginForm() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0f1a] text-white flex flex-col items-center justify-center p-4 selection:bg-[#ffaa00] selection:text-black">
-      <BrandLogo size="md" />
+    <main className="min-h-screen bg-[#0a0f1a] text-white selection:bg-[#ffaa00] selection:text-black">
+      <div className="sticky top-0 z-50 bg-[#121824]/90 backdrop-blur-md border-b border-[#2a3441] shadow-2xl">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center">
+          <BrandLogo size="sm" />
+        </div>
+      </div>
+      <div className="flex flex-col items-center justify-center p-4 pt-12">
 
       <AuthCard title="Iniciar Sesión">
         {error && (
@@ -102,6 +107,7 @@ export function LoginForm() {
           </p>
         </div>
       </AuthCard>
+      </div>
     </main>
   );
 }
