@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import { Providers } from '@/components/Providers';
+import { WhatsAppWidget } from '@/components/WhatsAppWidget';
 import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <Providers>
           {children}
         </Providers>
+        <WhatsAppWidget />
       </body>
     </html>
   );
