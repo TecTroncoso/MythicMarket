@@ -8,15 +8,20 @@ export async function lookupPlayer(
   userId: string,
   zoneId: string
 ): Promise<LookupResult | null> {
-  for (const fetcher of [fetchBanana, fetchGoPay, fetchIsan]) {
-    try {
-      const result = await fetcher(userId, zoneId);
-      if (result) return result;
-    } catch {
-      // swallow — try next upstream
-    }
+  // Fire all upstreams concurrently; the first non-null result wins.
+  // Worst case drops from the SUM of the timeouts (sequential) to the MAX.
+  const attempts = [fetchBanana, fetchGoPay, fetchIsan].map(async (fetcher) => {
+    const result = await fetcher(userId, zoneId);
+    if (result) return result;
+    throw new Error("no-result");
+  });
+
+  try {
+    return await Promise.any(attempts);
+  } catch {
+    // All upstreams failed or returned no result.
+    return null;
   }
-  return null;
 }
 
 async function fetchBanana(

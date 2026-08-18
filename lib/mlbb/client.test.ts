@@ -26,7 +26,8 @@ describe("lookupPlayer — Banana primary", () => {
 
     const result = await lookupPlayer("569296372", "10012");
     expect(result).toEqual({ nickname: "*Legend__gamer*", country: "PH" });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // All three upstreams fire concurrently; Banana's success wins.
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     const [url] = fetchMock.mock.calls[0];
     expect(url).toContain("bananagameshop.com");
     expect(url).toContain("id=569296372");
@@ -50,7 +51,10 @@ describe("lookupPlayer — fallback chain", () => {
 
     const result = await lookupPlayer("569296372", "10012");
     expect(result).toEqual({ nickname: "*GoPayUser*", country: "PH" });
-    expect(fetchMock).toHaveBeenCalledTimes(2); // ISAN NOT called
+    // All three upstreams fire concurrently; GoPay's success is the first
+    // non-null result.
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1][0]).toContain("gopay.co.id");
   });
 
   it("falls back to ISAN when first two fail", async () => {
@@ -147,8 +151,8 @@ describe("lookupPlayer — fallback chain", () => {
   });
 });
 
-describe("lookupPlayer — timeout per upstream", () => {
-  it("advances to next upstream after the AbortSignal aborts", async () => {
+describe("lookupPlayer — concurrent upstreams", () => {
+  it("completes with the healthy upstream while another one hangs", async () => {
     // Stub AbortSignal.timeout so we can fire the abort manually. Production
     // calls `AbortSignal.timeout(12_000)` internally — vitest's fake timers
     // don't intercept that timer (it lives in Node's internal timer API), so
@@ -176,12 +180,14 @@ describe("lookupPlayer — timeout per upstream", () => {
 
       const promise = lookupPlayer("569296372", "10012");
 
-      // Fire the abort that AbortSignal.timeout(12_000) would have fired.
-      manualController.abort();
-
+      // GoPay resolves before the abort fires; the hanging Banana fetch
+      // does not delay the result.
       const result = await promise;
       expect(result).toEqual({ nickname: "*GoPayUser*", country: "PH" });
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+
+      // Fire the abort that AbortSignal.timeout(12_000) would have fired.
+      manualController.abort();
     } finally {
       AbortSignal.timeout = originalTimeout;
     }
