@@ -24,8 +24,8 @@ export const SUPPORT_SHIFTS: SupportShift[] = [
 // Used when closed (off-hours) or when getOnDuty fails.
 export const SUPPORT_FALLBACK_NUMBER = "5491136799182";
 
-export const SUPPORT_PREFILLED_MESSAGE =
-  "Hola! Vengo de MythicMarket y necesito ayuda con mi compra.";
+export const SUPPORT_WELCOME_MESSAGE =
+  "¡Hola! ¿En qué podemos ayudarte? Escríbenos tu consulta.";
 
 // h23 cycle guarantees hour parts are 00-23 (hour12: false alone can emit "24"
 // for midnight in some runtimes).
