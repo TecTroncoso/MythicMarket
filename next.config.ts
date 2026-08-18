@@ -8,18 +8,12 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Allow access to remote image placeholder.
+  // Allow Google account avatars (lh3.googleusercontent.com) rendered by next/image.
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**', // This allows any path under the hostname
-      },
-      {
-        protocol: 'https',
-        hostname: 'upload.wikimedia.org',
+        hostname: 'lh3.googleusercontent.com',
         port: '',
         pathname: '/**',
       }

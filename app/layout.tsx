@@ -1,5 +1,4 @@
 import type {Metadata} from 'next';
-import { Providers } from '@/components/Providers';
 import { WhatsAppWidget } from '@/components/WhatsAppWidget';
 import './globals.css'; // Global styles
 
@@ -31,9 +30,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="es">
       <body suppressHydrationWarning>
-        <Providers>
-          {children}
-        </Providers>
+        {children}
         <WhatsAppWidget />
       </body>
     </html>

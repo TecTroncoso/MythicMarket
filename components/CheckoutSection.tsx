@@ -6,17 +6,20 @@ import { Info, ShoppingCart, ShieldCheck, ChevronRight, Loader2, Check } from 'l
 import { processCheckout } from '@/lib/actions/checkout';
 
 const PRODUCTS = [
-  { id: '1', name: '86 Diamonds', price: 1.49, bonus: '8 Diamonds', image: 'https://picsum.photos/seed/mlbb1/100/100' },
-  { id: '2', name: '172 Diamonds', price: 2.99, bonus: '16 Diamonds', image: 'https://picsum.photos/seed/mlbb2/100/100' },
-  { id: '3', name: '257 Diamonds', price: 4.49, bonus: '24 Diamonds', image: 'https://picsum.photos/seed/mlbb3/100/100' },
-  { id: '4', name: '429 Diamonds', price: 7.49, bonus: '40 Diamonds', image: 'https://picsum.photos/seed/mlbb4/100/100' },
-  { id: '5', name: '706 Diamonds', price: 11.99, bonus: '66 Diamonds', image: 'https://picsum.photos/seed/mlbb5/100/100' },
-  { id: '6', name: '2195 Diamonds', price: 34.99, bonus: '205 Diamonds', image: 'https://picsum.photos/seed/mlbb5/100/100' },
-  { id: '7', name: 'Twilight Pass', price: 9.99, bonus: '', image: 'https://picsum.photos/seed/mlbbtp/100/100' },
-  { id: '8', name: 'Weekly Diamond Pass', price: 1.99, bonus: 'Save 60%', image: 'https://picsum.photos/seed/mlbbwdp/100/100' },
+  { id: '1', name: '86 Diamonds', price: 1.49, bonus: '8 Diamonds', image: '/products/mlbb1.jpg' },
+  { id: '2', name: '172 Diamonds', price: 2.99, bonus: '16 Diamonds', image: '/products/mlbb2.jpg' },
+  { id: '3', name: '257 Diamonds', price: 4.49, bonus: '24 Diamonds', image: '/products/mlbb3.jpg' },
+  { id: '4', name: '429 Diamonds', price: 7.49, bonus: '40 Diamonds', image: '/products/mlbb4.jpg' },
+  { id: '5', name: '706 Diamonds', price: 11.99, bonus: '66 Diamonds', image: '/products/mlbb5.jpg' },
+  { id: '6', name: '2195 Diamonds', price: 34.99, bonus: '205 Diamonds', image: '/products/mlbb5.jpg' },
+  { id: '7', name: 'Twilight Pass', price: 9.99, bonus: '', image: '/products/mlbbtp.jpg' },
+  { id: '8', name: 'Weekly Diamond Pass', price: 1.99, bonus: 'Save 60%', image: '/products/mlbbwdp.jpg' },
 ];
 
-export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
+  // Effective login state: the explicit prop when provided, otherwise resolved
+  // once from /api/auth/session on the client (default false).
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn ?? false);
   const [userId, setUserId] = useState('');
   const [zoneId, setZoneId] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
@@ -29,6 +32,26 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
     | { kind: "success"; nickname: string; country: string }
     | { kind: "warning" };
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>({ kind: "idle" });
+
+  useEffect(() => {
+    // When the parent does not pass `isLoggedIn`, resolve the session once on
+    // the client. Explicit props (e.g. isLoggedIn={false} in tests) skip the fetch.
+    if (isLoggedIn === undefined) {
+      const controller = new AbortController();
+      (async () => {
+        try {
+          const res = await fetch("/api/auth/session", { signal: controller.signal });
+          const data = (await res.json()) as { user?: unknown } | null;
+          if (data?.user) {
+            setLoggedIn(true);
+          }
+        } catch {
+          // Stay logged-out on failure.
+        }
+      })();
+      return () => controller.abort();
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     const valid = /^\d{5,10}$/.test(userId) && /^\d{3,5}$/.test(zoneId);
@@ -75,7 +98,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   const handleCheckout = () => {
     setCheckoutError(null);
-    if (!isLoggedIn) {
+    if (!loggedIn) {
       setCheckoutError('Debes iniciar sesión para realizar una compra.');
       return;
     }
@@ -194,7 +217,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
                       {prod.bonus}
                     </div>
                   )}
-                  <Image src={prod.image} alt={`Recarga de ${prod.name}`} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16 mb-3 object-contain drop-shadow-lg" referrerPolicy="no-referrer" />
+                  <Image src={prod.image} alt={`Recarga de ${prod.name}`} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16 mb-3 object-contain drop-shadow-lg" />
                   <span className="font-bold text-sm md:text-base text-center line-clamp-2 leading-tight mb-1">{prod.name}</span>
                   <span className={`text-xs font-medium ${isSelected ? 'text-[#ffaa00]' : 'text-gray-400'}`}>
                     US${prod.price.toFixed(2)}
@@ -221,7 +244,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
             {selectedProductData ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-4 bg-[#0a0f1a] p-4 rounded-xl border border-[#2a3441]">
-                  <Image src={selectedProductData.image} alt={`Resumen de ${selectedProductData.name}`} width={48} height={48} className="w-12 h-12 rounded bg-[#1c2534] object-contain" referrerPolicy="no-referrer" />
+                  <Image src={selectedProductData.image} alt={`Resumen de ${selectedProductData.name}`} width={48} height={48} className="w-12 h-12 rounded bg-[#1c2534] object-contain" />
                   <div>
                     <div className="font-bold text-lg">{selectedProductData.name}</div>
                     <div className="text-sm text-gray-400">Mobile Legends</div>

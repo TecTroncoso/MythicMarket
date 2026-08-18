@@ -1,13 +1,9 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { LogOut, User } from 'lucide-react';
-import { auth } from '@/auth';
-import { SignOutButton } from './SignOutButton';
+import type { Session } from 'next-auth';
+import { UserMenu } from './UserMenu';
 import { BrandLogo } from './BrandLogo';
 
-export async function Navbar() {
-  const session = await auth();
-
+export function Navbar({ session }: { session?: Session | null }) {
   return (
     <header className="sticky top-0 z-50 bg-[#121824]/90 backdrop-blur-md border-b border-[#2a3441] shadow-2xl">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -22,27 +18,7 @@ export async function Navbar() {
           <Link href="/" className="text-[#ffaa00]">Mobile Legends</Link>
         </nav>
         <div className="flex items-center gap-4">
-          {session?.user ? (
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                title="Mis compras"
-                className="hidden sm:flex items-center gap-2 bg-[#1c2534] px-3 py-1.5 rounded-lg border border-[#2a3441] hover:border-[#ffaa00]/50 hover:bg-[#232e41] transition-colors"
-              >
-                {session.user.image ? (
-                  <Image src={session.user.image} alt="User" width={24} height={24} className="rounded-full" />
-                ) : (
-                  <User className="w-4 h-4 text-gray-400" />
-                )}
-                <span className="text-sm font-medium text-gray-200">{session.user.name?.split(" ")[0] || "Usuario"}</span>
-              </Link>
-              <SignOutButton />
-            </div>
-          ) : (
-            <Link href="/login" className="text-sm font-semibold bg-[#2a3441] hover:bg-[#344050] px-4 py-2 rounded-lg transition-all text-white">
-              Iniciar Sesión
-            </Link>
-          )}
+          <UserMenu initialSession={session} />
         </div>
       </div>
     </header>

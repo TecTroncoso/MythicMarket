@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import { users } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
-import { signIn } from "@/auth"
+import { signIn, signOut } from "@/auth"
 import { AuthError } from "next-auth"
 import { LoginSchema, RegisterSchema } from "@/lib/validations"
 import { authRateLimiter } from "@/lib/rate-limit"
@@ -53,6 +53,10 @@ export async function login(formData: FormData) {
 
 export async function loginWithGoogle() {
   await signIn("google", { redirectTo: "/" })
+}
+
+export async function signOutAction(): Promise<void> {
+  await signOut({ redirectTo: "/" })
 }
 
 export async function register(formData: FormData) {

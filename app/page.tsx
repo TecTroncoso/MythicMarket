@@ -1,16 +1,12 @@
 import Image from 'next/image';
 import { Zap, HelpCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
-import { auth } from '@/auth';
 import dynamic from 'next/dynamic';
 
 const CheckoutSection = dynamic(() => import('@/components/CheckoutSection').then(mod => mod.CheckoutSection));
 const ReviewsSection = dynamic(() => import('@/components/ReviewsSection').then(mod => mod.ReviewsSection));
 
-export default async function MobileLegendsStore() {
-  const session = await auth();
-  const isLoggedIn = !!session?.user;
-
+export default function MobileLegendsStore() {
   return (
     <main className="min-h-screen bg-[#0a0f1a] text-white font-sans selection:bg-[#ffaa00] selection:text-black pb-20">
       <Navbar />
@@ -21,13 +17,12 @@ export default async function MobileLegendsStore() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 relative flex flex-col md:flex-row items-center gap-8">
           <div className="w-32 h-32 md:w-48 md:h-48 relative flex items-center justify-center shrink-0">
             <Image 
-              src="https://upload.wikimedia.org/wikipedia/en/a/a0/Mobile_Legends_Bang_Bang_2025_logo.png" 
+              src="/mlbb-logo.png" 
               alt="Mobile Legends: Bang Bang" 
               width={200} 
               height={200} 
               sizes="(max-width: 768px) 128px, 192px"
               className="w-full h-auto drop-shadow-[0_0_20px_rgba(255,170,0,0.4)]" 
-              referrerPolicy="no-referrer" 
               priority
               fetchPriority="high"
             />
@@ -47,7 +42,7 @@ export default async function MobileLegendsStore() {
       <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-3 gap-8 relative mt-0">
         
         {/* Interactive Checkout Area */}
-        <CheckoutSection isLoggedIn={isLoggedIn} />
+        <CheckoutSection />
 
         {/* Static FAQ Section */}
         <section className="bg-[#121824] rounded-2xl p-6 md:p-8 border border-[#1c2534] shadow-xl lg:col-span-2">
