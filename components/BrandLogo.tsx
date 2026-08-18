@@ -11,7 +11,7 @@ export type BrandLogoSize = keyof typeof SIZES;
 export function BrandLogo({ size = "md" }: { size?: BrandLogoSize }) {
   const s = SIZES[size];
   return (
-    <Link href="/" className="mb-8 flex items-center gap-3 group">
+    <Link href="/" className="flex items-center gap-3 group">
       <div
         className={`${s.box} bg-gradient-to-tr from-[#ffaa00] to-[#ff5d00] rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform`}
       >

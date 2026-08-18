@@ -42,6 +42,9 @@ export function RegisterForm() {
         </div>
       </div>
       <div className="flex flex-col items-center justify-center p-4 pt-12">
+        <div className="mb-8">
+          <BrandLogo size="md" />
+        </div>
 
       <AuthCard title="Crear Cuenta">
         {error && (
