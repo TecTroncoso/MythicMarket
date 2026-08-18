@@ -28,12 +28,26 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
-    // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-    if (dev && process.env.DISABLE_HMR === 'true') {
-      config.watchOptions = {
-        ignored: /.*/,
-      };
+    if (dev) {
+      if (process.env.DISABLE_HMR === 'true') {
+        // HMR fully disabled to prevent flickering during agent edits.
+        config.watchOptions = { ignored: /.*/ };
+      } else {
+        // Ignore Windows system files at drive root that cause EINVAL lstat
+        // errors ("Watchpack Error: invalid argument, lstat 'C:\pagefile.sys'")
+        // alongside the usual heavy build artefact dirs.
+        config.watchOptions = {
+          ignored: [
+            '**/node_modules/**',
+            '**/.git/**',
+            '**/.next/**',
+            'pagefile.sys',
+            'hiberfil.sys',
+            'swapfile.sys',
+            'System Volume Information/**',
+          ],
+        };
+      }
     }
     return config;
   },
