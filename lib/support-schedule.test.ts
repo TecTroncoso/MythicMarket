@@ -1,90 +1,159 @@
 import { describe, it, expect } from "vitest";
 import {
   SUPPORT_FALLBACK_NUMBER,
+  SUPPORT_PEOPLE,
   getOnDutyInfo,
-  getOnDutyInfoForShifts,
+  isPersonOnDuty,
+  resolvePerson,
 } from "@/lib/support-schedule";
 
 // Buenos Aires is UTC-3 year-round (no DST), so AR wall time = UTC - 3h:
 // 13:00Z = 10:00 AR, 19:59Z = 16:59 AR, 20:00Z = 17:00 AR, 23:00Z = 20:00 AR,
 // 05:00Z = 02:00 AR, 03:30Z = 00:30 AR, 11:00Z = 08:00 AR, 15:00Z = 12:00 AR,
 // 12:00Z = 09:00 AR.
+// Madrid in August is CEST (UTC+2), so ES wall time = UTC + 2h:
+// 08:00Z = 10:00 Madrid, 15:00Z = 17:00 Madrid, 01:00Z = 03:00 Madrid,
+// 06:00Z = 08:00 Madrid.
 
-describe("getOnDutyInfo", () => {
-  it("returns person A during the morning shift (10:00 AR)", () => {
-    const info = getOnDutyInfo(new Date("2026-08-18T13:00:00.000Z"));
+const AR_PERSON = SUPPORT_PEOPLE[0];
+const ES_PERSON = SUPPORT_PEOPLE[1];
+
+describe("resolvePerson", () => {
+  it("maps AR (LATAM) to the Argentine person", () => {
+    const person = resolvePerson("AR");
+    expect(person.id).toBe("ar");
+    expect(person.number).toBe("5491136799182");
+  });
+
+  it("maps any LATAM country to the Argentine person (MX)", () => {
+    expect(resolvePerson("MX").id).toBe("ar");
+  });
+
+  it("maps ES to the Spanish person", () => {
+    const person = resolvePerson("ES");
+    expect(person.id).toBe("es");
+    expect(person.number).toBe("34642084779");
+  });
+
+  it("maps any European country to the Spanish person (DE)", () => {
+    expect(resolvePerson("DE").id).toBe("es");
+  });
+
+  it("maps other countries to the default Argentine person (US)", () => {
+    expect(resolvePerson("US").id).toBe("ar");
+  });
+
+  it("maps undefined/null to the default Argentine person", () => {
+    expect(resolvePerson(undefined).id).toBe("ar");
+    expect(resolvePerson(null).id).toBe("ar");
+  });
+
+  it("is case-insensitive (lowercase es still resolves to es)", () => {
+    expect(resolvePerson("es").id).toBe("es");
+  });
+});
+
+describe("isPersonOnDuty (AR person, 09:00-17:00 Buenos Aires)", () => {
+  it("is on duty at 10:00 AR", () => {
+    expect(isPersonOnDuty(AR_PERSON, new Date("2026-08-18T13:00:00.000Z"))).toBe(true);
+  });
+
+  it("is NOT on duty exactly at 17:00 AR (to is exclusive)", () => {
+    expect(isPersonOnDuty(AR_PERSON, new Date("2026-08-18T20:00:00.000Z"))).toBe(false);
+  });
+
+  it("is on duty at 16:59 AR", () => {
+    expect(isPersonOnDuty(AR_PERSON, new Date("2026-08-18T19:59:00.000Z"))).toBe(true);
+  });
+
+  it("is NOT on duty at 02:00 AR", () => {
+    expect(isPersonOnDuty(AR_PERSON, new Date("2026-08-18T05:00:00.000Z"))).toBe(false);
+  });
+});
+
+describe("isPersonOnDuty (ES person, 09:00-17:00 Madrid)", () => {
+  it("is on duty at 10:00 Madrid", () => {
+    expect(isPersonOnDuty(ES_PERSON, new Date("2026-08-18T08:00:00.000Z"))).toBe(true);
+  });
+
+  it("is NOT on duty exactly at 17:00 Madrid (to is exclusive)", () => {
+    expect(isPersonOnDuty(ES_PERSON, new Date("2026-08-18T15:00:00.000Z"))).toBe(false);
+  });
+
+  it("is NOT on duty at 03:00 Madrid", () => {
+    expect(isPersonOnDuty(ES_PERSON, new Date("2026-08-18T01:00:00.000Z"))).toBe(false);
+  });
+});
+
+describe("isPersonOnDuty (overnight shifts)", () => {
+  const overnightPerson = {
+    id: "n",
+    label: "N",
+    number: "5491136799999",
+    timezone: "America/Argentina/Buenos_Aires",
+    shifts: [{ from: "23:00", to: "09:00" }],
+  };
+
+  it("matches just after midnight (00:30 AR)", () => {
+    expect(isPersonOnDuty(overnightPerson, new Date("2026-08-18T03:30:00.000Z"))).toBe(true);
+  });
+
+  it("matches before the shift end (08:00 AR)", () => {
+    expect(isPersonOnDuty(overnightPerson, new Date("2026-08-18T11:00:00.000Z"))).toBe(true);
+  });
+
+  it("does not match outside the overnight window (12:00 AR)", () => {
+    expect(isPersonOnDuty(overnightPerson, new Date("2026-08-18T15:00:00.000Z"))).toBe(false);
+  });
+
+  it("does not match exactly at the exclusive end (09:00 AR)", () => {
+    expect(isPersonOnDuty(overnightPerson, new Date("2026-08-18T12:00:00.000Z"))).toBe(false);
+  });
+});
+
+describe("getOnDutyInfo (geo + schedule)", () => {
+  it("ES visitor during her shift: ES number, isOpen true", () => {
+    const info = getOnDutyInfo(new Date("2026-08-18T08:00:00.000Z"), "ES");
     expect(info).toEqual({
-      number: "5491136799182",
-      label: "A",
+      number: "34642084779",
+      label: "ES",
       isOpen: true,
-      shiftName: "A",
+      shiftName: "ES",
     });
   });
 
-  it("returns person B during the evening shift (20:00 AR)", () => {
-    const info = getOnDutyInfo(new Date("2026-08-18T23:00:00.000Z"));
+  it("ES visitor off-hours: still her number, isOpen false, shiftName null", () => {
+    const info = getOnDutyInfo(new Date("2026-08-18T01:00:00.000Z"), "ES");
     expect(info).toEqual({
-      number: "5491100000001",
-      label: "B",
-      isOpen: true,
-      shiftName: "B",
-    });
-  });
-
-  it("boundary: exactly 17:00 AR belongs to B (to is exclusive)", () => {
-    const atStartOfB = getOnDutyInfo(new Date("2026-08-18T20:00:00.000Z"));
-    expect(atStartOfB.label).toBe("B");
-
-    // One minute earlier is still A (from is inclusive).
-    const justBeforeB = getOnDutyInfo(new Date("2026-08-18T19:59:00.000Z"));
-    expect(justBeforeB.label).toBe("A");
-  });
-
-  it("off-hours returns the fallback number with isOpen false (02:00 AR)", () => {
-    const info = getOnDutyInfo(new Date("2026-08-18T05:00:00.000Z"));
-    expect(info).toEqual({
-      number: SUPPORT_FALLBACK_NUMBER,
-      label: null,
+      number: "34642084779",
+      label: "ES",
       isOpen: false,
       shiftName: null,
     });
   });
 
-  it("evaluates in SUPPORT_TIMEZONE, not the caller's UTC wall time", () => {
-    // 20:00Z is 17:00 in Buenos Aires (start of shift B). If the function
-    // used the caller's UTC wall time, 20:00 would be off-hours and the
-    // result would be the fallback with isOpen false.
-    const info = getOnDutyInfo(new Date("2026-08-18T20:00:00.000Z"));
+  it("AR visitor during the shift: AR number, isOpen true", () => {
+    const info = getOnDutyInfo(new Date("2026-08-18T13:00:00.000Z"), "AR");
+    expect(info.number).toBe("5491136799182");
     expect(info.isOpen).toBe(true);
-    expect(info.number).toBe("5491100000001");
-  });
-});
-
-describe("getOnDutyInfoForShifts (overnight shifts)", () => {
-  const overnightShift = [
-    { from: "23:00", to: "09:00", number: "5491136799999", label: "N" },
-  ];
-
-  it("matches just after midnight (00:30 AR)", () => {
-    const info = getOnDutyInfoForShifts(new Date("2026-08-18T03:30:00.000Z"), overnightShift);
-    expect(info.isOpen).toBe(true);
-    expect(info.label).toBe("N");
   });
 
-  it("matches before the shift end (08:00 AR)", () => {
-    const info = getOnDutyInfoForShifts(new Date("2026-08-18T11:00:00.000Z"), overnightShift);
-    expect(info.isOpen).toBe(true);
-    expect(info.label).toBe("N");
+  it("AR visitor off-hours: AR number, isOpen false", () => {
+    const info = getOnDutyInfo(new Date("2026-08-18T23:00:00.000Z"), "AR");
+    expect(info.number).toBe("5491136799182");
+    expect(info.isOpen).toBe(false);
   });
 
-  it("does not match outside the overnight window (12:00 AR)", () => {
-    const info = getOnDutyInfoForShifts(new Date("2026-08-18T15:00:00.000Z"), overnightShift);
+  it("no country during AR shift: defaults to AR person, isOpen true", () => {
+    const info = getOnDutyInfo(new Date("2026-08-18T13:00:00.000Z"));
+    expect(info.number).toBe("5491136799182");
+    expect(info.label).toBe("AR");
+    expect(info.isOpen).toBe(true);
+  });
+
+  it("no country off-hours: fallback number, isOpen false", () => {
+    const info = getOnDutyInfo(new Date("2026-08-18T05:00:00.000Z"));
     expect(info.isOpen).toBe(false);
     expect(info.number).toBe(SUPPORT_FALLBACK_NUMBER);
-  });
-
-  it("does not match exactly at the exclusive end (09:00 AR)", () => {
-    const info = getOnDutyInfoForShifts(new Date("2026-08-18T12:00:00.000Z"), overnightShift);
-    expect(info.isOpen).toBe(false);
   });
 });

@@ -1,24 +1,41 @@
 export type SupportShift = {
   from: string; // "HH:MM" 24h, inclusive
-  to: string; // "HH:MM" 24h, exclusive (so 17:00 belongs to the shift starting at 17:00)
-  number: string; // international format without "+", e.g. "5491136799182"
-  label: string; // short name, e.g. "A"
+  to: string; // "HH:MM" 24h, exclusive
+};
+
+export type SupportPerson = {
+  id: string; // "ar" | "es"
+  label: string; // "AR" | "ES"
+  number: string; // international format without "+"
+  timezone: string; // IANA name
+  shifts: SupportShift[];
 };
 
 export type OnDutyInfo = {
   number: string;
-  label: string | null; // null when closed
+  label: string | null; // person label ("AR"/"ES") or null
   isOpen: boolean;
   shiftName: string | null;
 };
 
-export const SUPPORT_TIMEZONE = "America/Argentina/Buenos_Aires";
+export const SUPPORT_TIMEZONE = "America/Argentina/Buenos_Aires"; // kept for backwards compat
 
-// Person A: real owner number (5491136799182).
-// Person B: fictitious number (5491100000001) — replace with the real one.
-export const SUPPORT_SHIFTS: SupportShift[] = [
-  { from: "09:00", to: "17:00", number: "5491136799182", label: "A" },
-  { from: "17:00", to: "23:00", number: "5491100000001", label: "B" }, // TODO: replace with real number of owner 2
+// Generic shifts for now — the owner can adjust later.
+export const SUPPORT_PEOPLE: SupportPerson[] = [
+  {
+    id: "ar",
+    label: "AR",
+    number: "5491136799182", // Argentine owner (real)
+    timezone: "America/Argentina/Buenos_Aires",
+    shifts: [{ from: "09:00", to: "17:00" }],
+  },
+  {
+    id: "es",
+    label: "ES",
+    number: "34642084779", // Spanish partner (real)
+    timezone: "Europe/Madrid",
+    shifts: [{ from: "09:00", to: "17:00" }],
+  },
 ];
 
 // Used when closed (off-hours) or when getOnDuty fails.
@@ -27,23 +44,43 @@ export const SUPPORT_FALLBACK_NUMBER = "5491136799182";
 export const SUPPORT_WELCOME_MESSAGE =
   "¡Hola! ¿En qué podemos ayudarte? Escríbenos tu consulta.";
 
-// h23 cycle guarantees hour parts are 00-23 (hour12: false alone can emit "24"
-// for midnight in some runtimes).
-const timeFormatter = new Intl.DateTimeFormat("en-US", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-  hourCycle: "h23",
-  timeZone: SUPPORT_TIMEZONE,
-});
+export const LATAM_COUNTRY_CODES: ReadonlySet<string> = new Set([
+  "AR", "BO", "BR", "CL", "CO", "CR", "CU", "DO", "EC", "GT",
+  "HN", "MX", "NI", "PA", "PE", "PY", "SV", "UY", "VE",
+]);
+
+export const EUROPE_COUNTRY_CODES: ReadonlySet<string> = new Set([
+  "ES", "AD", "AT", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE",
+  "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", "LT",
+  "LU", "LV", "MC", "MT", "NL", "NO", "PL", "PT", "RO", "SE", "SI", "SK",
+]);
+
+// One formatter per timezone, built lazily. h23 cycle guarantees hour parts
+// are 00-23 (hour12: false alone can emit "24" for midnight in some runtimes).
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
+function getFormatter(timezone: string): Intl.DateTimeFormat {
+  let formatter = formatters.get(timezone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      hourCycle: "h23",
+      timeZone: timezone,
+    });
+    formatters.set(timezone, formatter);
+  }
+  return formatter;
+}
 
 function toMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 }
 
-function minutesSinceMidnight(now: Date): number {
-  const parts = timeFormatter.formatToParts(now);
+function minutesSinceMidnight(now: Date, timezone: string): number {
+  const parts = getFormatter(timezone).formatToParts(now);
   const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0);
   const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0);
   return hour * 60 + minute;
@@ -58,32 +95,43 @@ function isInShift(currentMinutes: number, fromMinutes: number, toMinutesValue: 
 }
 
 /**
- * Evaluates the given instant against an arbitrary list of shifts, in
- * SUPPORT_TIMEZONE (NOT the caller's local timezone). First matching shift
- * wins. Returns the fallback number with isOpen: false when nothing matches.
+ * Country code (ISO 3166-1 alpha-2, uppercase) → person.
+ * Latin America → AR person, Europe → ES person,
+ * unknown/missing → default (AR, the first person in SUPPORT_PEOPLE).
  */
-export function getOnDutyInfoForShifts(now: Date, shifts: SupportShift[]): OnDutyInfo {
-  const currentMinutes = minutesSinceMidnight(now);
-
-  for (const shift of shifts) {
-    if (isInShift(currentMinutes, toMinutes(shift.from), toMinutes(shift.to))) {
-      return {
-        number: shift.number,
-        label: shift.label,
-        isOpen: true,
-        shiftName: shift.label,
-      };
-    }
+export function resolvePerson(countryCode?: string | null): SupportPerson {
+  const code = countryCode?.toUpperCase();
+  if (code && LATAM_COUNTRY_CODES.has(code)) {
+    return SUPPORT_PEOPLE[0]; // ar
   }
-
-  return { number: SUPPORT_FALLBACK_NUMBER, label: null, isOpen: false, shiftName: null };
+  if (code && EUROPE_COUNTRY_CODES.has(code)) {
+    return SUPPORT_PEOPLE[1]; // es
+  }
+  return SUPPORT_PEOPLE[0]; // default: ar
 }
 
 /**
- * Returns which support person is on duty at the given instant, evaluated in
- * SUPPORT_TIMEZONE. In-shift returns that shift's number (isOpen: true);
- * off-hours returns SUPPORT_FALLBACK_NUMBER (isOpen: false, label: null).
+ * Evaluates one person's shifts in THEIR timezone at the given instant.
+ * Overnight shifts (from > to) supported. First matching shift wins.
  */
-export function getOnDutyInfo(now: Date): OnDutyInfo {
-  return getOnDutyInfoForShifts(now, SUPPORT_SHIFTS);
+export function isPersonOnDuty(person: SupportPerson, now: Date): boolean {
+  const currentMinutes = minutesSinceMidnight(now, person.timezone);
+  return person.shifts.some((shift) =>
+    isInShift(currentMinutes, toMinutes(shift.from), toMinutes(shift.to)),
+  );
+}
+
+/**
+ * Geo + schedule combined. number = resolved person's number ALWAYS (even
+ * off-hours — the message waits for their next shift); isOpen = on-duty.
+ */
+export function getOnDutyInfo(now: Date, countryCode?: string | null): OnDutyInfo {
+  const person = resolvePerson(countryCode);
+  const isOpen = isPersonOnDuty(person, now);
+  return {
+    number: person.number,
+    label: person.label,
+    isOpen,
+    shiftName: isOpen ? person.label : null,
+  };
 }
