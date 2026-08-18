@@ -24,14 +24,18 @@ export async function Navbar() {
         <div className="flex items-center gap-4">
           {session?.user ? (
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 bg-[#1c2534] px-3 py-1.5 rounded-lg border border-[#2a3441]">
+              <Link
+                href="/dashboard"
+                title="Mis compras"
+                className="hidden sm:flex items-center gap-2 bg-[#1c2534] px-3 py-1.5 rounded-lg border border-[#2a3441] hover:border-[#ffaa00]/50 hover:bg-[#232e41] transition-colors"
+              >
                 {session.user.image ? (
                   <Image src={session.user.image} alt="User" width={24} height={24} className="rounded-full" />
                 ) : (
                   <User className="w-4 h-4 text-gray-400" />
                 )}
                 <span className="text-sm font-medium text-gray-200">{session.user.name?.split(" ")[0] || "Usuario"}</span>
-              </div>
+              </Link>
               <SignOutButton />
             </div>
           ) : (
