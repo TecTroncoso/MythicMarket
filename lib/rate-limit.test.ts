@@ -149,11 +149,13 @@ describe("rate-limit (in-memory fallback path)", () => {
 });
 
 describe("rate-limit exported limiters", () => {
-  it("exports authRateLimiter and checkoutRateLimiter", async () => {
+  it("exports authRateLimiter, checkoutRateLimiter, and mlbbLookupRateLimiter", async () => {
     const mod = await importRateLimit();
     expect(mod.authRateLimiter).toBeDefined();
     expect(mod.checkoutRateLimiter).toBeDefined();
+    expect(mod.mlbbLookupRateLimiter).toBeDefined();
     expect(typeof mod.authRateLimiter.limit).toBe("function");
     expect(typeof mod.checkoutRateLimiter.limit).toBe("function");
+    expect(typeof mod.mlbbLookupRateLimiter.limit).toBe("function");
   });
 });

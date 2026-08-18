@@ -50,3 +50,4 @@ const getLimiter = (requests: number, windowStr: Parameters<typeof Ratelimit.sli
 
 export const checkoutRateLimiter = getLimiter(5, "60 s");
 export const authRateLimiter = getLimiter(5, "60 s");
+export const mlbbLookupRateLimiter = getLimiter(30, "60 s");
