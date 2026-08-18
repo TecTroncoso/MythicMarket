@@ -24,30 +24,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
+        console.log("[authorize] credentials keys:", Object.keys(credentials ?? {}))
         const validatedFields = LoginSchema.safeParse(credentials)
 
         if (!validatedFields.success) {
+          console.log("[authorize] validation FAILED:", validatedFields.error.issues)
           return null
         }
 
         const { email, password } = validatedFields.data
+        console.log("[authorize] looking up user:", email)
 
         const userRecord = await db.query.users.findFirst({
           where: eq(users.email, email),
         })
 
-        if (!userRecord || !userRecord.password) {
+        if (!userRecord) {
+          console.log("[authorize] NO user found for:", email)
+          return null
+        }
+        if (!userRecord.password) {
+          console.log("[authorize] user found but has NO password (OAuth-only?):", email)
           return null
         }
 
+        console.log("[authorize] user found, comparing passwords...")
         const passwordsMatch = await bcrypt.compare(
           password,
           userRecord.password
         )
+        console.log("[authorize] passwordsMatch:", passwordsMatch)
 
         if (!passwordsMatch) return null
 
-        return userRecord
+        // Never expose the password hash in the returned object / token.
+        const { password: _pw, ...safeUser } = userRecord
+        return safeUser as typeof userRecord
       },
     }),
   ],
