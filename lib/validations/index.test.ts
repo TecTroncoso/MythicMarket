@@ -3,6 +3,7 @@ import {
   RegisterSchema,
   LoginSchema,
   CheckoutSchema,
+  MLBBLookupSchema,
 } from "@/lib/validations";
 
 describe("RegisterSchema", () => {
@@ -175,5 +176,40 @@ describe("CheckoutSchema", () => {
         "Debes seleccionar un producto válido",
       );
     }
+  });
+});
+
+describe("MLBBLookupSchema", () => {
+  it("accepts valid input", () => {
+    const result = MLBBLookupSchema.parse({
+      userId: "12345678",
+      zoneId: "10012",
+    });
+    expect(result.userId).toBe("12345678");
+    expect(result.zoneId).toBe("10012");
+  });
+
+  it("rejects non-digit userId", () => {
+    expect(() =>
+      MLBBLookupSchema.parse({ userId: "abc12345", zoneId: "10012" }),
+    ).toThrow();
+  });
+
+  it("rejects userId outside 5-10 digits", () => {
+    expect(() =>
+      MLBBLookupSchema.parse({ userId: "1234", zoneId: "10012" }),
+    ).toThrow();
+    expect(() =>
+      MLBBLookupSchema.parse({ userId: "12345678901", zoneId: "10012" }),
+    ).toThrow();
+  });
+
+  it("rejects zoneId outside 3-5 digits", () => {
+    expect(() =>
+      MLBBLookupSchema.parse({ userId: "12345678", zoneId: "12" }),
+    ).toThrow();
+    expect(() =>
+      MLBBLookupSchema.parse({ userId: "12345678", zoneId: "123456" }),
+    ).toThrow();
   });
 });

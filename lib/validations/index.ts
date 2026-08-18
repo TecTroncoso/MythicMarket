@@ -26,3 +26,9 @@ export const CheckoutSchema = z.object({
     .regex(/^[0-9]+$/, "El Zone ID solo debe contener números"),
   productId: z.string().min(1, "Debes seleccionar un producto válido"),
 });
+
+export const MLBBLookupSchema = z.object({
+  userId: z.string().regex(/^\d{5,10}$/, "User ID debe tener entre 5 y 10 dígitos"),
+  zoneId: z.string().regex(/^\d{3,5}$/, "Zone ID debe tener entre 3 y 5 dígitos"),
+});
+export type MLBBLookupInput = z.infer<typeof MLBBLookupSchema>;
