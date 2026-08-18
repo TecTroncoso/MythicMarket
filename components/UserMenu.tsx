@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, ShieldCheck, User } from 'lucide-react';
 import type { Session } from 'next-auth';
 import { signOutAction } from '@/lib/actions/auth';
 
@@ -45,6 +45,16 @@ export function UserMenu({ initialSession }: { initialSession?: Session | null }
           )}
           <span className="text-sm font-medium text-gray-200">{session.user.name?.split(" ")[0] || "Usuario"}</span>
         </Link>
+        {session.user.role === "admin" && (
+          <Link
+            href="/admin"
+            title="Panel de administración"
+            className="hidden sm:flex items-center gap-2 bg-[#1c2534] px-3 py-1.5 rounded-lg border border-[#2a3441] hover:border-[#ffaa00]/50 hover:bg-[#232e41] transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 text-[#ffaa00]" />
+            <span className="text-sm font-medium text-gray-200">Admin</span>
+          </Link>
+        )}
         <form action={signOutAction}>
           <button
             type="submit"
