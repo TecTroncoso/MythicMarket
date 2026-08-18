@@ -27,14 +27,14 @@ export const SUPPORT_PEOPLE: SupportPerson[] = [
     label: "AR",
     number: "5491136799182", // Argentine owner (real)
     timezone: "America/Argentina/Buenos_Aires",
-    shifts: [{ from: "09:00", to: "17:00" }],
+    shifts: [{ from: "07:00", to: "24:00" }],
   },
   {
     id: "es",
     label: "ES",
     number: "34642084779", // Spanish partner (real)
     timezone: "Europe/Madrid",
-    shifts: [{ from: "09:00", to: "17:00" }],
+    shifts: [{ from: "08:00", to: "24:00" }],
   },
 ];
 
