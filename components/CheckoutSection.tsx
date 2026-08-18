@@ -100,6 +100,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn: boolean }) {
         setCheckoutError(res.error);
       } else if (res.success) {
         alert(res.message);
+        window.location.href = "/dashboard";
       }
     });
   };

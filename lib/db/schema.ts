@@ -45,6 +45,30 @@ export const sessions = sqliteTable("session", {
   expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
 });
 
+export const orders = sqliteTable("orders", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  orderNumber: text("orderNumber").notNull().unique(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  productId: text("productId").notNull(),
+  productName: text("productName").notNull(),
+  amountCents: integer("amountCents").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  mlbbUserId: text("mlbbUserId").notNull(),
+  zoneId: text("zoneId").notNull(),
+  status: text("status", { enum: ["pending", "paid", "cancelled"] })
+    .notNull()
+    .default("pending"),
+  createdAt: integer("createdAt", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type Order = typeof orders.$inferSelect;
+
 export const verificationTokens = sqliteTable(
   "verificationToken",
   {

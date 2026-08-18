@@ -159,4 +159,46 @@ describe("CheckoutSection MLBB lookup UX", () => {
     const warningButton = screen.getByRole("button", { name: /Comprar Ahora/i }) as HTMLButtonElement;
     expect(warningButton.disabled).toBe(false);
   });
+
+  it("successful checkout alerts the confirmation and navigates to /dashboard", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    // Record the navigation target; getter keeps a valid absolute base URL so
+    // next/image can still resolve image sources during render (happy-dom's
+    // real Location.href setter rejects relative paths).
+    const locationSetter = vi.fn();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: {
+        get href() {
+          return "http://localhost/";
+        },
+        set href(value: string) {
+          locationSetter(value);
+        },
+      },
+    });
+
+    const { processCheckout } = await import("@/lib/actions/checkout");
+    vi.mocked(processCheckout).mockResolvedValueOnce({
+      success: true,
+      message: "¡Pedido confirmado! Tu número de orden es MM-TEST1234.",
+      orderNumber: "MM-TEST1234",
+      redirectUrl: "/dashboard",
+    });
+
+    render(<CheckoutSection isLoggedIn={true} />);
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+
+    // Flush the async transition (mock resolves immediately, no timers needed).
+    await act(async () => {});
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "¡Pedido confirmado! Tu número de orden es MM-TEST1234."
+    );
+    expect(locationSetter).toHaveBeenCalledWith("/dashboard");
+    alertSpy.mockRestore();
+  });
 });

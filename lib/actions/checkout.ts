@@ -3,6 +3,9 @@
 import { auth } from "@/auth"
 import { CheckoutSchema } from "@/lib/validations"
 import { checkoutRateLimiter } from "@/lib/rate-limit"
+import { db } from "@/lib/db"
+import { orders } from "@/lib/db/schema"
+import { generateOrderNumber } from "@/lib/orders"
 
 const SERVER_PRODUCTS = {
   '1': { name: '86 Diamonds', price: 1.49 },
@@ -46,20 +49,40 @@ export async function processCheckout(formData: FormData) {
     return { error: "Estás intentando crear demasiadas órdenes muy rápido. Espera un minuto." }
   }
 
-  // 5. Simulación de creación de orden
+  // 5. Registrar la orden en la base de datos
+  const orderNumber = generateOrderNumber()
+  try {
+    await db.insert(orders).values({
+      orderNumber,
+      userId: session.user.id,
+      productId,
+      productName: secureProduct.name,
+      amountCents: Math.round(secureProduct.price * 100),
+      currency: "USD",
+      mlbbUserId: userId,
+      zoneId,
+      status: "pending",
+    })
+  } catch (error) {
+    console.error("Error al registrar la orden en la base de datos:", error)
+    return { success: false, message: "No se pudo registrar la orden. Intentá de nuevo." }
+  }
+
+  // 6. Simulación de procesamiento de la orden
   try {
     // Aquí iría la integración con Lootbar, Stripe, PayPal, etc.
     // Usando `secureProduct.price` en vez de cualquier precio enviado por el cliente.
     
-    console.log(`Procesando orden para ${session.user.email}: Producto ${secureProduct.name} ($${secureProduct.price}) a la cuenta MLBB ${userId}(${zoneId})`)
+    console.log(`Procesando orden ${orderNumber} para ${session.user.email}: Producto ${secureProduct.name} ($${secureProduct.price}) a la cuenta MLBB ${userId}(${zoneId})`)
     
     // Simular un delay de API
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     return { 
       success: true, 
-      message: "Orden generada con éxito. Redirigiendo a la pasarela...",
-      redirectUrl: "/checkout/gateway-simulation" // Esto redirigiría a la URL de pago real
+      message: `¡Pedido confirmado! Tu número de orden es ${orderNumber}.`,
+      orderNumber,
+      redirectUrl: "/dashboard"
     }
   } catch (error) {
     console.error("Error al procesar el checkout:", error)
