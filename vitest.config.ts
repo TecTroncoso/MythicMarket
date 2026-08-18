@@ -10,7 +10,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: false,
-    include: ["lib/**/*.test.ts", "**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "**/*.test.ts", "**/*.test.tsx"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
