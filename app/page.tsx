@@ -260,9 +260,9 @@ export default function Home() {
       
       {/* Footer Banner */}
       <div className="max-w-7xl mx-auto px-4 mt-12">
-        <div className="bg-[#090014] border border-[#ff00ff]/40 rounded-2xl flex flex-col xl:flex-row items-stretch justify-between relative overflow-hidden shadow-[0_0_20px_rgba(255,0,255,0.15)]">
+        <div className="bg-[#0b001a] border border-[#ff00ff]/30 rounded-2xl flex flex-col xl:flex-row items-stretch justify-between relative overflow-hidden shadow-[0_0_20px_rgba(255,0,255,0.15)]">
           {/* subtle glow inside */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#ff00ff]/5 to-transparent pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#13002b] to-transparent pointer-events-none"></div>
           
           <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-8 gap-y-6 py-5 px-6 relative z-10 flex-1">
             
@@ -311,9 +311,9 @@ export default function Home() {
           {/* Game On Block */}
           <div className="relative py-6 px-10 xl:pl-20 xl:pr-12 flex items-center justify-center w-full xl:w-auto">
             {/* Skewed background and border (Desktop) */}
-            <div className="absolute inset-y-0 -right-20 left-0 bg-gradient-to-r from-[#1a0033] to-[#2a0050] border-l-2 border-[#ff00ff] -skew-x-12 transform origin-bottom shadow-[inset_15px_0_20px_-10px_rgba(255,0,255,0.5)] hidden xl:block"></div>
+            <div className="absolute inset-y-0 -right-20 left-0 bg-[#240046] border-l-2 border-[#ff00ff] -skew-x-12 transform origin-bottom shadow-[inset_15px_0_30px_-10px_rgba(255,0,255,0.6)] hidden xl:block"></div>
             {/* Unskewed background (Mobile) */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1a0033] to-[#2a0050] border-t-2 border-[#ff00ff] shadow-[inset_0_15px_20px_-10px_rgba(255,0,255,0.5)] xl:hidden"></div>
+            <div className="absolute inset-0 bg-[#240046] border-t-2 border-[#ff00ff] shadow-[inset_0_15px_30px_-10px_rgba(255,0,255,0.6)] xl:hidden"></div>
             
             <div className="relative z-10 flex items-center gap-4">
               <Gamepad2 className="w-9 h-9 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
