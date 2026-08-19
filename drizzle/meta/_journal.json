@@ -8,6 +8,13 @@
       "when": 1787092384860,
       "tag": "0000_lowly_prodigy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787106053835,
+      "tag": "0001_brown_iron_monger",
+      "breakpoints": true
     }
   ]
 }
