@@ -400,16 +400,24 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </div>
           </div>
 
-          {/* Accepted Payment Methods */}
+          {/* Accepted Payment Methods (region-aware) */}
           <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534]">
-            <h4 className="font-bold text-sm mb-3">Métodos aceptados</h4>
+            <h4 className="font-bold text-sm mb-1">Métodos aceptados</h4>
+            <p className="text-[11px] text-gray-500 mb-3">
+              {effectiveRegion === "eu" ? "Región Europa" : "Región Latinoamérica"}
+            </p>
             <div className="flex flex-wrap gap-2">
-              {['PayPal', 'Tarjeta', 'Mercado Pago', 'Pix', 'OXXO', 'Bizum', 'SEPA', 'N26', 'Revolut'].map((label) => (
+              {effectiveCfg.methods.map((m) => (
                 <span
-                  key={label}
-                  className="rounded-full border border-[#2a3441] bg-[#0a0f1a] px-3 py-1 text-[11px] font-semibold text-gray-300"
+                  key={m.id}
+                  className="inline-flex items-center justify-center h-9 min-w-[2.5rem] px-2 bg-white rounded-lg border border-gray-700"
                 >
-                  {label}
+                  {m.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.logo} alt={m.label} className="h-5 w-auto object-contain" />
+                  ) : (
+                    <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
+                  )}
                 </span>
               ))}
             </div>
