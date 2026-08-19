@@ -1,10 +1,10 @@
 import Image from 'next/image';
 import { Zap, HelpCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { ReviewsSectionLoader } from '@/components/ReviewsSectionLoader';
 import dynamic from 'next/dynamic';
 
 const CheckoutSection = dynamic(() => import('@/components/CheckoutSection').then(mod => mod.CheckoutSection));
-const ReviewsSection = dynamic(() => import('@/components/ReviewsSection').then(mod => mod.ReviewsSection));
 
 export default function MobileLegendsStore() {
   return (
@@ -76,7 +76,7 @@ export default function MobileLegendsStore() {
         </section>
 
         {/* Interactive Reviews Area */}
-        <ReviewsSection />
+        <ReviewsSectionLoader />
 
       </div>
     </main>
