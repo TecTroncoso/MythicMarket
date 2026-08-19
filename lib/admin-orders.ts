@@ -161,6 +161,7 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
         cancelledCount: sql<number>`count(*) filter (where ${eq(orders.status, "cancelled")})`,
       })
       .from(orders)
+      .innerJoin(users, eq(orders.userId, users.id))
       .where(and(...conditions)),
   ]);
 

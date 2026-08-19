@@ -52,8 +52,11 @@ const innerJoinFn = vi.fn((_table: unknown, _condition: unknown) => ({
 }));
 const ordersFromFn = vi.fn(() => ({ innerJoin: innerJoinFn }));
 
+const statsInnerJoinFn = vi.fn((_table: unknown, _condition: unknown) => ({
+  where: statsWhereFn,
+}));
 const statsWhereFn = vi.fn(async (_conditions: unknown[]) => [STATS_ROW]);
-const statsFromFn = vi.fn(() => ({ where: statsWhereFn }));
+const statsFromFn = vi.fn(() => ({ innerJoin: statsInnerJoinFn }));
 
 const mockSelect = vi.fn((config: Record<string, unknown>) => ({
   from: "orderNumber" in config ? ordersFromFn : statsFromFn,
@@ -252,5 +255,14 @@ describe("getAdminOrders()", () => {
     const statsSql = serialize(statsWhereFn.mock.calls[0]?.[0]);
     expect(statsSql.sql).toBe(listSql.sql);
     expect(statsSql.params).toEqual(listSql.params);
+  });
+
+  it("joins users on the stats query too (the q filter references user.email)", async () => {
+    // Regression: the stats query previously had NO join, so any search (q)
+    // crashed in production with "no such column: user.email".
+    await getAdminOrders({ q: "ana" });
+
+    expect(statsInnerJoinFn).toHaveBeenCalledWith(users, expect.anything());
+    expect(statsWhereFn).toHaveBeenCalledTimes(1);
   });
 });
