@@ -114,6 +114,9 @@ export function AdminOrdersPanel({
         mlbbUserId: order.mlbbUserId,
         zoneId: order.zoneId,
         buyerPhone: withDetail.paymentDetail ?? "",
+        // The admin query does not expose the buyer name; keep it empty.
+        buyerName: "",
+        methodLabel: "Bizum",
       }),
       "_blank"
     );

@@ -191,6 +191,8 @@ describe("buildBizumComprobanteUrl", () => {
       mlbbUserId: "12345678",
       zoneId: "10012",
       buyerPhone: "34600000000",
+      buyerName: "Juan Pérez",
+      methodLabel: "Bizum",
     });
 
     expect(url.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
@@ -199,5 +201,7 @@ describe("buildBizumComprobanteUrl", () => {
     expect(text).toContain("172 Diamonds");
     expect(text).toContain(formatAmount(137, "EUR"));
     expect(text).toContain("34600000000");
+    expect(text).toContain("Juan Pérez");
+    expect(text).toContain("Método: Bizum.");
   });
 });

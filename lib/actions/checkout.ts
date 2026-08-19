@@ -141,6 +141,7 @@ export async function processCheckout(formData: FormData) {
       success: true, 
       message: `¡Pedido confirmado! ${paymentInstructions(paymentMethod, amountCents / 100, currency, orderNumber)}`,
       orderNumber,
+      buyerName: session.user.name ?? "",
       redirectUrl: "/dashboard"
     }
   } catch (error) {

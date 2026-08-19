@@ -328,6 +328,7 @@ describe("CheckoutSection payment modal flow", () => {
       message: "¡Pedido confirmado! Te enviamos el link de pago a tu email de Mercado Pago.",
       orderNumber: "MM-TEST1234",
       redirectUrl: "/dashboard",
+      buyerName: "Test User",
     });
 
     render(<CheckoutSection isLoggedIn={true} />);
@@ -372,6 +373,7 @@ describe("CheckoutSection payment modal flow", () => {
       message: "¡Pedido confirmado! Te enviamos la solicitud a tu cuenta de PayPal.",
       orderNumber: "MM-TEST1234",
       redirectUrl: "/dashboard",
+      buyerName: "Test User",
     });
 
     render(<CheckoutSection isLoggedIn={true} />);
@@ -401,7 +403,11 @@ describe("CheckoutSection payment modal flow", () => {
 
   it("opens the Bizum receipt wa.me link on a successful bizum checkout", async () => {
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+    // The component opens a blank popup while the click gesture is active and
+    // then points it at the wa.me URL once the order is confirmed.
+    const openSpy = vi.spyOn(window, "open").mockImplementation(
+      () => ({ location: { href: "" } }) as unknown as Window
+    );
     const locationSetter = stubLocation();
 
     vi.mocked(processCheckout).mockResolvedValueOnce({
@@ -409,6 +415,7 @@ describe("CheckoutSection payment modal flow", () => {
       message: "¡Pedido confirmado! Aceptá la solicitud de pago en tu app bancaria.",
       orderNumber: "MM-TEST1234",
       redirectUrl: "/dashboard",
+      buyerName: "Juan Pérez",
     });
 
     render(<CheckoutSection isLoggedIn={true} />);
@@ -434,15 +441,21 @@ describe("CheckoutSection payment modal flow", () => {
     const formData = vi.mocked(processCheckout).mock.calls[0][0];
     expect(formData.get("paymentMethod")).toBe("bizum");
     expect(formData.get("paymentRegion")).toBe("eu");
-    expect(alertSpy).toHaveBeenCalled();
+    // Only the blank popup is opened via window.open; the wa.me URL is
+    // assigned to that window's location instead of a second popup.
     expect(openSpy).toHaveBeenCalledTimes(1);
-    const url = openSpy.mock.calls[0][0] as string;
-    expect(url.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
-    const text = decodeURIComponent(url.split("?text=")[1]);
+    expect(openSpy).toHaveBeenNthCalledWith(1, "", "_blank");
+    const fakeWindow = openSpy.mock.results[0].value as { location: { href: string } };
+    expect(fakeWindow.location.href.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
+    const text = decodeURIComponent(fakeWindow.location.href.split("?text=")[1]);
     expect(text).toContain("MM-TEST1234");
     expect(text).toContain("172 Diamonds");
     expect(text).toContain(formatAmount(299, "EUR"));
     expect(text).toContain("34600000000");
+    expect(text).toContain("Juan Pérez");
+    expect(text).toContain("Método: Bizum.");
+    // No blocking alert on the Bizum path.
+    expect(alertSpy).not.toHaveBeenCalled();
     expect(locationSetter).toHaveBeenCalledWith("/dashboard");
     alertSpy.mockRestore();
     openSpy.mockRestore();

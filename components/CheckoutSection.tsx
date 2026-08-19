@@ -163,6 +163,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     }
 
     startTransition(async () => {
+      // Browsers block popups opened after an await, so the Bizum receipt
+      // window must be opened while the click gesture is still active. It is
+      // pointed at the wa.me URL once the order is confirmed (or left blank
+      // if the checkout fails or the popup is blocked).
+      const bizumWindow = selectedMethod === "bizum" ? window.open("", "_blank") : null;
+
       const formData = new FormData();
       formData.append("userId", userId);
       formData.append("zoneId", zoneId);
@@ -177,22 +183,29 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         setCheckoutError(res.error);
         setIsModalOpen(false);
       } else if (res.success) {
-        alert(res.message);
-        // Bizum buyers must send the receipt (payment screenshot) to the
-        // store's WhatsApp before the order can be marked paid.
-        if (selectedMethod === "bizum" && res.orderNumber) {
-          window.open(
-            buildBizumComprobanteUrl({
-              orderNumber: res.orderNumber,
-              productName: selectedProductData?.name ?? "",
-              amountCents: Math.round(summaryPrice * 100),
-              currency: effectiveCfg.currency,
-              mlbbUserId: userId,
-              zoneId,
-              buyerPhone: paymentDetail.trim(),
-            }),
-            "_blank"
-          );
+        if (selectedMethod === "bizum") {
+          // Bizum buyers must send the receipt (payment screenshot) to the
+          // store's WhatsApp before the order can be marked paid.
+          const url = buildBizumComprobanteUrl({
+            orderNumber: res.orderNumber ?? "",
+            productName: selectedProductData?.name ?? "",
+            amountCents: Math.round(summaryPrice * 100),
+            currency: effectiveCfg.currency,
+            mlbbUserId: userId,
+            zoneId,
+            buyerPhone: paymentDetail.trim(),
+            buyerName: res.buyerName ?? "",
+            methodLabel: "Bizum",
+          });
+          if (bizumWindow) {
+            bizumWindow.location.href = url;
+          } else {
+            // The popup was blocked: fall back to a direct open (may still be
+            // blocked by the browser, but it is the best effort available).
+            window.open(url, "_blank");
+          }
+        } else {
+          alert(res.message);
         }
         window.location.href = "/dashboard";
       }

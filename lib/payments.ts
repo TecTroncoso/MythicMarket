@@ -247,6 +247,11 @@ export function paymentInstructions(
 
 // Bizum receipt recipient (the store's receiving account).
 export const BIZUM_RECIPIENT_PHONE = "34642084779";
+// Human-readable phone of the receiving Bizum account, shown in the checkout
+// modal so the buyer knows where to send the Bizum.
+export const BIZUM_RECIPIENT_DISPLAY = "+34 642 08 47 79";
+// Display name of the receiving Bizum account.
+export const BIZUM_RECIPIENT_NAME = "M00NYX";
 
 export interface BizumComprobanteParams {
   orderNumber: string;
@@ -256,6 +261,8 @@ export interface BizumComprobanteParams {
   mlbbUserId: string;
   zoneId: string;
   buyerPhone: string;
+  buyerName: string;
+  methodLabel: string;
 }
 
 // wa.me deep link that pre-fills the Bizum receipt message to the store's
@@ -265,7 +272,8 @@ export function buildBizumComprobanteUrl(params: BizumComprobanteParams): string
   const text =
     `Comprobante MythicMarket — Pedido ${params.orderNumber}: ${params.productName} ` +
     `${formatAmount(params.amountCents, params.currency)} (${params.currency}). ` +
-    `Referencia: ${params.orderNumber}. Pagador MLBB ${params.mlbbUserId}(${params.zoneId}) ` +
-    `— tel ${params.buyerPhone}.`;
+    `Referencia: ${params.orderNumber}. Pagador: ${params.buyerName} — MLBB ` +
+    `${params.mlbbUserId}(${params.zoneId}) — tel ${params.buyerPhone}. ` +
+    `Método: ${params.methodLabel}.`;
   return `https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=${encodeURIComponent(text)}`;
 }

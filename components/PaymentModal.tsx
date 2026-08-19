@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Loader2, X } from 'lucide-react';
+import { BIZUM_RECIPIENT_DISPLAY, BIZUM_RECIPIENT_NAME } from '@/lib/payments';
 import type { PaymentRegionConfig } from '@/lib/payments';
 
 interface PaymentModalProps {
@@ -157,6 +158,13 @@ export function PaymentModal({
               placeholder={selectedMethodDef.fieldPlaceholder ?? ''}
               className="w-full bg-[#0a0f1a] border border-[#2a3441] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#ffaa00] focus:ring-1 focus:ring-[#ffaa00] transition-all"
             />
+            {selectedMethod === "bizum" && (
+              <div className="bg-[#0a0f1a] border border-[#2a3441] rounded-lg p-3 text-sm text-gray-300">
+                Enviá el Bizum a:{" "}
+                <strong className="text-white font-mono">{BIZUM_RECIPIENT_DISPLAY}</strong>{" "}
+                ({BIZUM_RECIPIENT_NAME})
+              </div>
+            )}
           </div>
         )}
         {paymentError && <p className="text-red-400 text-sm mt-2">{paymentError}</p>}
