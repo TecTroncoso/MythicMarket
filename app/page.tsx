@@ -4,9 +4,18 @@ import { Search, Heart, ShoppingCart, User, Zap, ShieldCheck, ChevronRight, Game
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#060012] text-white font-sans selection:bg-[#ff00ff] selection:text-white pb-20 overflow-x-hidden">
+    <main className="min-h-screen text-white font-sans selection:bg-[#ff00ff] selection:text-white pb-20 overflow-x-hidden relative">
+      {/* Ambient Neon Background */}
+      <div className="fixed inset-0 z-[-1] bg-[#090014]">
+        {/* Abstract Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        {/* Glowing Orbs */}
+        <div className="absolute top-[-10%] left-1/4 w-[50vw] h-[50vw] bg-[#ff00ff] opacity-15 rounded-full blur-[150px] mix-blend-screen pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-1/4 w-[50vw] h-[50vw] bg-[#00ffff] opacity-10 rounded-full blur-[150px] mix-blend-screen pointer-events-none"></div>
+      </div>
+
       {/* Custom Neon Navbar */}
-      <nav className="border-b border-[#2a0050] bg-[#060012]/80 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b border-[#2a0050] bg-[#090014]/60 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff00ff] to-[#00ffff] flex items-center justify-center p-0.5 shadow-[0_0_15px_rgba(255,0,255,0.4)]">
