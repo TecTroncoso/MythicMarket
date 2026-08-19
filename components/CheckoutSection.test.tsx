@@ -69,6 +69,8 @@ vi.mock("@/lib/actions/checkout", () => ({
 
 import { CheckoutSection } from "./CheckoutSection";
 import { processCheckout } from "@/lib/actions/checkout";
+import { BIZUM_RECIPIENT_PHONE } from "@/lib/payments";
+import { formatAmount } from "@/lib/orders";
 
 const SUCCESS_RESPONSE = (nickname: string, country: string) => ({
   ok: true,
@@ -395,5 +397,54 @@ describe("CheckoutSection payment modal flow", () => {
     expect(formData.get("paymentRegion")).toBe("eu");
     expect(alertSpy).toHaveBeenCalled();
     alertSpy.mockRestore();
+  });
+
+  it("opens the Bizum receipt wa.me link on a successful bizum checkout", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+    const locationSetter = stubLocation();
+
+    vi.mocked(processCheckout).mockResolvedValueOnce({
+      success: true,
+      message: "¡Pedido confirmado! Aceptá la solicitud de pago en tu app bancaria.",
+      orderNumber: "MM-TEST1234",
+      redirectUrl: "/dashboard",
+    });
+
+    render(<CheckoutSection isLoggedIn={true} />);
+    // Let the mocked getCheckoutContext resolve so the payment methods render.
+    await act(async () => {});
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
+    // Flush the microtask that resets the payment selection on region change.
+    await act(async () => {});
+    fireEvent.click(screen.getByRole("button", { name: /Bizum/ }));
+    fireEvent.change(screen.getByPlaceholderText("34600000000"), {
+      target: { value: "34600000000" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
+
+    // Flush the async transition (mock resolves immediately, no timers needed).
+    await act(async () => {});
+
+    const formData = vi.mocked(processCheckout).mock.calls[0][0];
+    expect(formData.get("paymentMethod")).toBe("bizum");
+    expect(formData.get("paymentRegion")).toBe("eu");
+    expect(alertSpy).toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    const url = openSpy.mock.calls[0][0] as string;
+    expect(url.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
+    const text = decodeURIComponent(url.split("?text=")[1]);
+    expect(text).toContain("MM-TEST1234");
+    expect(text).toContain("172 Diamonds");
+    expect(text).toContain(formatAmount(299, "EUR"));
+    expect(text).toContain("34600000000");
+    expect(locationSetter).toHaveBeenCalledWith("/dashboard");
+    alertSpy.mockRestore();
+    openSpy.mockRestore();
   });
 });

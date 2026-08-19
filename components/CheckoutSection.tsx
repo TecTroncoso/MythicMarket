@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Info, ShoppingCart, ShieldCheck, ChevronRight, Loader2, Check } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
-import { PAYMENT_REGIONS, validatePaymentDetail } from '@/lib/payments';
+import { PAYMENT_REGIONS, validatePaymentDetail, buildBizumComprobanteUrl } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
 import { PaymentModal } from './PaymentModal';
 
@@ -178,6 +178,22 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         setIsModalOpen(false);
       } else if (res.success) {
         alert(res.message);
+        // Bizum buyers must send the receipt (payment screenshot) to the
+        // store's WhatsApp before the order can be marked paid.
+        if (selectedMethod === "bizum" && res.orderNumber) {
+          window.open(
+            buildBizumComprobanteUrl({
+              orderNumber: res.orderNumber,
+              productName: selectedProductData?.name ?? "",
+              amountCents: Math.round(summaryPrice * 100),
+              currency: effectiveCfg.currency,
+              mlbbUserId: userId,
+              zoneId,
+              buyerPhone: paymentDetail.trim(),
+            }),
+            "_blank"
+          );
+        }
         window.location.href = "/dashboard";
       }
     });
@@ -388,7 +404,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534]">
             <h4 className="font-bold text-sm mb-3">Métodos aceptados</h4>
             <div className="flex flex-wrap gap-2">
-              {['PayPal', 'Tarjeta', 'Mercado Pago', 'Pix', 'OXXO', 'Bizum', 'SEPA'].map((label) => (
+              {['PayPal', 'Tarjeta', 'Mercado Pago', 'Pix', 'OXXO', 'Bizum', 'SEPA', 'N26', 'Revolut'].map((label) => (
                 <span
                   key={label}
                   className="rounded-full border border-[#2a3441] bg-[#0a0f1a] px-3 py-1 text-[11px] font-semibold text-gray-300"

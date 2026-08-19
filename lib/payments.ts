@@ -92,6 +92,26 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
         pattern: "^\\+?\\d{9,12}$",
         patternHint: "Ingresá un teléfono válido (9-12 dígitos).",
       },
+      {
+        id: "n26",
+        label: "N26",
+        description: "Transferí desde tu cuenta N26 al instante.",
+        needsField: true,
+        fieldLabel: "IBAN de N26",
+        fieldPlaceholder: "DE89370400440532013000",
+        pattern: "^[A-Z]{2}\\d{2}[A-Z0-9]{10,30}$",
+        patternHint: "Ingresá un IBAN válido.",
+      },
+      {
+        id: "revolut",
+        label: "Revolut",
+        description: "Transferí desde tu cuenta Revolut al instante.",
+        needsField: true,
+        fieldLabel: "IBAN de Revolut",
+        fieldPlaceholder: "DE89370400440532013000",
+        pattern: "^[A-Z]{2}\\d{2}[A-Z0-9]{10,30}$",
+        patternHint: "Ingresá un IBAN válido.",
+      },
     ],
   },
   latam: {
@@ -175,6 +195,8 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   card: "Tarjeta de crédito/débito",
   sepa: "SEPA (Transferencia)",
   bizum: "Bizum",
+  n26: "N26",
+  revolut: "Revolut",
   mercadopago: "Mercado Pago",
   pix: "Pix",
   oxxo: "OXXO",
@@ -196,6 +218,10 @@ export function paymentInstructions(
       return `Transferí ${formatted} al IBAN ES12 3456 7890 1234 5678 90 usando la referencia ${orderNumber}.`;
     case "bizum":
       return "Aceptá la solicitud de pago en tu app bancaria.";
+    case "n26":
+      return `Transferí ${formatted} al IBAN de N26 ES12 3456 7890 1234 5678 90 usando la referencia ${orderNumber}.`;
+    case "revolut":
+      return `Transferí ${formatted} al IBAN de Revolut ES12 3456 7890 1234 5678 90 usando la referencia ${orderNumber}.`;
     case "mercadopago":
       return "Te enviamos el link de pago a tu email de Mercado Pago.";
     case "pix":
@@ -205,4 +231,29 @@ export function paymentInstructions(
     default:
       return "Procesaremos tu pago por el método seleccionado.";
   }
+}
+
+// Bizum receipt recipient (the store's receiving account).
+export const BIZUM_RECIPIENT_PHONE = "34642084779";
+
+export interface BizumComprobanteParams {
+  orderNumber: string;
+  productName: string;
+  amountCents: number;
+  currency: "EUR" | "USD";
+  mlbbUserId: string;
+  zoneId: string;
+  buyerPhone: string;
+}
+
+// wa.me deep link that pre-fills the Bizum receipt message to the store's
+// WhatsApp account. Single-line neutral Spanish; encodeURIComponent handles
+// the em-dash and parentheses in the text.
+export function buildBizumComprobanteUrl(params: BizumComprobanteParams): string {
+  const text =
+    `Comprobante MythicMarket — Pedido ${params.orderNumber}: ${params.productName} ` +
+    `${formatAmount(params.amountCents, params.currency)} (${params.currency}). ` +
+    `Referencia: ${params.orderNumber}. Pagador MLBB ${params.mlbbUserId}(${params.zoneId}) ` +
+    `— tel ${params.buyerPhone}.`;
+  return `https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=${encodeURIComponent(text)}`;
 }

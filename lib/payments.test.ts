@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
+  BIZUM_RECIPIENT_PHONE,
+  buildBizumComprobanteUrl,
   convertPrice,
   countryToRegion,
   getMethod,
@@ -57,6 +59,8 @@ describe("getMethod / regionForMethod", () => {
     expect(getMethod("card")?.label).toBe("Tarjeta de crédito/débito");
     expect(getMethod("sepa")?.label).toBe("SEPA (Transferencia)");
     expect(getMethod("bizum")?.label).toBe("Bizum");
+    expect(getMethod("n26")?.label).toBe("N26");
+    expect(getMethod("revolut")?.label).toBe("Revolut");
     expect(getMethod("mercadopago")?.label).toBe("Mercado Pago");
     expect(getMethod("pix")?.label).toBe("Pix");
     expect(getMethod("oxxo")?.label).toBe("OXXO");
@@ -98,6 +102,13 @@ describe("validatePaymentDetail", () => {
     expect(validatePaymentDetail("sepa", "1234")).toBe("Ingresá un IBAN válido.");
   });
 
+  it("validates n26 and revolut IBANs", () => {
+    expect(validatePaymentDetail("n26", "DE89370400440532013000")).toBeNull();
+    expect(validatePaymentDetail("n26", "1234")).toBe("Ingresá un IBAN válido.");
+    expect(validatePaymentDetail("revolut", "DE89370400440532013000")).toBeNull();
+    expect(validatePaymentDetail("revolut", "1234")).toBe("Ingresá un IBAN válido.");
+  });
+
   it("validates phone numbers for bizum", () => {
     expect(validatePaymentDetail("bizum", "34600000000")).toBeNull();
     expect(validatePaymentDetail("bizum", "123")).toBe("Ingresá un teléfono válido (9-12 dígitos).");
@@ -119,9 +130,11 @@ describe("validatePaymentDetail", () => {
 });
 
 describe("PAYMENT_METHOD_LABELS", () => {
-  it("labels all seven methods for the admin table", () => {
-    expect(Object.keys(PAYMENT_METHOD_LABELS)).toHaveLength(7);
+  it("labels all nine methods for the admin table", () => {
+    expect(Object.keys(PAYMENT_METHOD_LABELS)).toHaveLength(9);
     expect(PAYMENT_METHOD_LABELS.paypal).toBe("PayPal");
+    expect(PAYMENT_METHOD_LABELS.n26).toBe("N26");
+    expect(PAYMENT_METHOD_LABELS.revolut).toBe("Revolut");
     expect(PAYMENT_METHOD_LABELS.mercadopago).toBe("Mercado Pago");
     expect(PAYMENT_METHOD_LABELS.oxxo).toBe("OXXO");
   });
@@ -140,9 +153,39 @@ describe("paymentInstructions", () => {
     expect(out).toContain("MM-XYZ78901");
   });
 
+  it("embeds the method name and reference in n26 and revolut instructions", () => {
+    const n26 = paymentInstructions("n26", 1.37, "EUR", "ABC123");
+    expect(n26).toContain("N26");
+    expect(n26).toContain("ABC123");
+    const revolut = paymentInstructions("revolut", 1.37, "EUR", "ABC123");
+    expect(revolut).toContain("Revolut");
+    expect(revolut).toContain("ABC123");
+  });
+
   it("returns a generic message for unknown methods", () => {
     expect(paymentInstructions("bitcoin", 1, "USD", "MM-X")).toBe(
       "Procesaremos tu pago por el método seleccionado."
     );
+  });
+});
+
+describe("buildBizumComprobanteUrl", () => {
+  it("builds a wa.me link whose decoded text carries the receipt details", () => {
+    const url = buildBizumComprobanteUrl({
+      orderNumber: "MM-ABC12345",
+      productName: "172 Diamonds",
+      amountCents: 137,
+      currency: "EUR",
+      mlbbUserId: "12345678",
+      zoneId: "10012",
+      buyerPhone: "34600000000",
+    });
+
+    expect(url.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
+    const text = decodeURIComponent(url.split("?text=")[1]);
+    expect(text).toContain("MM-ABC12345");
+    expect(text).toContain("172 Diamonds");
+    expect(text).toContain(formatAmount(137, "EUR"));
+    expect(text).toContain("34600000000");
   });
 });

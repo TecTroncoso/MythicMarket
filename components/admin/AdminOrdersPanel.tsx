@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PackageOpen, Search, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/catalog';
 import { formatAmount, ORDER_STATUS_LABELS } from '@/lib/orders';
-import { PAYMENT_METHOD_LABELS } from '@/lib/payments';
+import { PAYMENT_METHOD_LABELS, buildBizumComprobanteUrl } from '@/lib/payments';
 import { searchAdminOrders, setOrderStatus } from '@/lib/actions/admin';
 import type { AdminOrderFilters, AdminOrderRow, AdminStats } from '@/lib/admin-orders';
 
@@ -98,6 +98,25 @@ export function AdminOrdersPanel({
     }
     // Refetch authoritative data; the action's revalidatePath stays in place.
     void load(filters);
+  }
+
+  // Opens the wa.me link that pre-fills the Bizum receipt message to the
+  // store's WhatsApp. The admin query does not select paymentDetail, so the
+  // buyer phone falls back to empty until the row includes it.
+  function openBizumComprobante(order: AdminOrderRow) {
+    const withDetail = order as AdminOrderRow & { paymentDetail?: string };
+    window.open(
+      buildBizumComprobanteUrl({
+        orderNumber: order.orderNumber,
+        productName: order.productName,
+        amountCents: order.amountCents,
+        currency: order.currency as "EUR" | "USD",
+        mlbbUserId: order.mlbbUserId,
+        zoneId: order.zoneId,
+        buyerPhone: withDetail.paymentDetail ?? "",
+      }),
+      "_blank"
+    );
   }
 
   return (
@@ -274,30 +293,41 @@ export function AdminOrdersPanel({
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {order.status === "pending" && (
-                        <div className="flex gap-2">
-                          <form onSubmit={handleStatusChange}>
-                            <input type="hidden" name="orderId" value={order.id} />
-                            <input type="hidden" name="status" value="paid" />
-                            <button
-                              type="submit"
-                              className="text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/40 hover:bg-green-500/20 px-3 py-1.5 rounded-lg transition-colors"
-                            >
-                              Marcar pagada
-                            </button>
-                          </form>
-                          <form onSubmit={handleStatusChange}>
-                            <input type="hidden" name="orderId" value={order.id} />
-                            <input type="hidden" name="status" value="cancelled" />
-                            <button
-                              type="submit"
-                              className="text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/40 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors"
-                            >
-                              Cancelar
-                            </button>
-                          </form>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+                        {order.paymentMethod === "bizum" && (
+                          <button
+                            type="button"
+                            onClick={() => openBizumComprobante(order)}
+                            className="text-xs font-semibold bg-transparent text-gray-300 border border-[#2a3441] hover:bg-[#1c2534] px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            Enviar comprobante
+                          </button>
+                        )}
+                        {order.status === "pending" && (
+                          <>
+                            <form onSubmit={handleStatusChange}>
+                              <input type="hidden" name="orderId" value={order.id} />
+                              <input type="hidden" name="status" value="paid" />
+                              <button
+                                type="submit"
+                                className="text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/40 hover:bg-green-500/20 px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                Marcar pagada
+                              </button>
+                            </form>
+                            <form onSubmit={handleStatusChange}>
+                              <input type="hidden" name="orderId" value={order.id} />
+                              <input type="hidden" name="status" value="cancelled" />
+                              <button
+                                type="submit"
+                                className="text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/40 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            </form>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

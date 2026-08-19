@@ -301,7 +301,7 @@ describe("getCheckoutContext()", () => {
     expect(ctx.region).toBe("eu");
     expect(ctx.currency).toBe("EUR");
     expect(ctx.symbol).toBe("€");
-    expect(ctx.methods.map((m) => m.id)).toEqual(["paypal", "card", "sepa", "bizum"]);
+    expect(ctx.methods.map((m) => m.id)).toEqual(["paypal", "card", "sepa", "bizum", "n26", "revolut"]);
     expect(ctx.methods[0]).toMatchObject({
       id: "paypal",
       label: "PayPal",
