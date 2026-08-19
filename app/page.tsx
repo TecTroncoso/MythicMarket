@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Heart, ShoppingCart, User, Zap, ShieldCheck, ChevronRight, Gamepad2, Crosshair, Map, Swords, Trophy, Ghost, Menu } from 'lucide-react';
+import { Search, Heart, ShoppingCart, User, Zap, ShieldCheck, ChevronRight, Gamepad2, Crosshair, Map, Swords, Trophy, Ghost, Menu, Truck, Lock, Headset, Users } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -260,32 +260,67 @@ export default function Home() {
       
       {/* Footer Banner */}
       <div className="max-w-7xl mx-auto px-4 mt-12">
-        <div className="bg-gradient-to-r from-[#13002b] via-[#2a0050] to-[#13002b] border border-[#3d0075] rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-          {/* Subtle texture emulation */}
-          <div className="absolute inset-0 opacity-10 mix-blend-overlay bg-repeat" style={{ backgroundImage: 'radial-gradient(circle at center, #ffffff 1px, transparent 1px)', backgroundSize: '10px 10px' }}></div>
+        <div className="bg-[#090014] border border-[#ff00ff]/40 rounded-2xl flex flex-col xl:flex-row items-stretch justify-between relative overflow-hidden shadow-[0_0_20px_rgba(255,0,255,0.15)]">
+          {/* subtle glow inside */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#ff00ff]/5 to-transparent pointer-events-none"></div>
           
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-8 relative z-10">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-8 h-8 text-[#00ffff]" />
+          <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-8 gap-y-6 py-5 px-6 relative z-10 flex-1">
+            
+            <div className="flex items-center gap-3 group">
+              <ShieldCheck className="w-8 h-8 text-[#ff00ff] group-hover:scale-110 transition-transform drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]" />
               <div>
-                <div className="font-bold text-sm">MILES DE PRODUCTOS</div>
-                <div className="text-xs text-gray-400">A LOS MEJORES PRECIOS</div>
+                <div className="font-black text-[12px] tracking-wide text-white">MILES DE PRODUCTOS</div>
+                <div className="text-[10px] text-gray-400 font-bold">A LOS MEJORES PRECIOS</div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Zap className="w-8 h-8 text-[#ff00ff]" />
+            
+            <div className="flex items-center gap-3 group">
+              <Truck className="w-8 h-8 text-[#ff00ff] group-hover:scale-110 transition-transform drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]" />
               <div>
-                <div className="font-bold text-sm">ENVÍO INSTANTÁNEO</div>
-                <div className="text-xs text-gray-400">RECIBE AL MOMENTO</div>
+                <div className="font-black text-[12px] tracking-wide text-white">ENVÍO INSTANTÁNEO</div>
+                <div className="text-[10px] text-gray-400 font-bold">RECIBE AL MOMENTO</div>
               </div>
             </div>
+            
+            <div className="flex items-center gap-3 group">
+              <Lock className="w-8 h-8 text-[#ff00ff] group-hover:scale-110 transition-transform drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]" />
+              <div>
+                <div className="font-black text-[12px] tracking-wide text-white">PAGOS SEGUROS</div>
+                <div className="text-[10px] text-gray-400 font-bold">MÚLTIPLES MÉTODOS</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 group">
+              <Headset className="w-8 h-8 text-[#ff00ff] group-hover:scale-110 transition-transform drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]" />
+              <div>
+                <div className="font-black text-[12px] tracking-wide text-white">SOPORTE 24/7</div>
+                <div className="text-[10px] text-gray-400 font-bold">SIEMPRE PARA TI</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 group">
+              <Users className="w-8 h-8 text-[#ff00ff] group-hover:scale-110 transition-transform drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]" />
+              <div>
+                <div className="font-black text-[12px] tracking-wide text-white">COMUNIDAD GAMER</div>
+                <div className="text-[10px] text-gray-400 font-bold">ÚNETE Y AHORRA</div>
+              </div>
+            </div>
+
           </div>
           
-          <div className="relative z-10 flex items-center gap-4">
-            <Gamepad2 className="w-8 h-8 text-[#00ffff] animate-pulse" />
-            <div>
-              <div className="font-black text-xl italic text-transparent bg-clip-text bg-gradient-to-r from-[#00ffff] to-[#ff00ff]">GAME ON.</div>
-              <div className="text-sm font-bold text-gray-300">AHORRA MÁS.</div>
+          {/* Game On Block */}
+          <div className="relative py-6 px-10 xl:pl-20 xl:pr-12 flex items-center justify-center w-full xl:w-auto">
+            {/* Skewed background and border (Desktop) */}
+            <div className="absolute inset-y-0 -right-20 left-0 bg-gradient-to-r from-[#1a0033] to-[#2a0050] border-l-2 border-[#ff00ff] -skew-x-12 transform origin-bottom shadow-[inset_15px_0_20px_-10px_rgba(255,0,255,0.5)] hidden xl:block"></div>
+            {/* Unskewed background (Mobile) */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1a0033] to-[#2a0050] border-t-2 border-[#ff00ff] shadow-[inset_0_15px_20px_-10px_rgba(255,0,255,0.5)] xl:hidden"></div>
+            
+            <div className="relative z-10 flex items-center gap-4">
+              <Gamepad2 className="w-9 h-9 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+              <div>
+                <div className="font-black text-xl italic text-transparent bg-clip-text bg-gradient-to-r from-[#ff00ff] to-white drop-shadow-[0_0_5px_rgba(255,0,255,0.8)] tracking-wide leading-tight">GAME ON.</div>
+                <div className="text-[11px] font-black text-gray-300 tracking-wider">AHORRA MÁS.</div>
+              </div>
             </div>
           </div>
         </div>
