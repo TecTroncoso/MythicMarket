@@ -391,15 +391,6 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             )}
           </div>
 
-          {/* Trust Badges */}
-          <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534] flex items-center gap-4">
-            <ShieldCheck className="w-10 h-10 text-green-500 shrink-0" />
-            <div>
-              <h4 className="font-bold text-sm">Pagos 100% Seguros</h4>
-              <p className="text-xs text-gray-400 mt-1">Tus datos están encriptados y protegidos mediante pasarelas verificadas.</p>
-            </div>
-          </div>
-
           {/* Accepted Payment Methods (region-aware) */}
           <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534]">
             <h4 className="font-bold text-sm mb-1">Métodos aceptados</h4>
@@ -410,7 +401,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               {effectiveCfg.methods.map((m) => (
                 <span
                   key={m.id}
-                  className="inline-flex items-center justify-center h-9 min-w-[2.5rem] px-2 bg-white rounded-lg border border-gray-700"
+                  className="flex flex-col items-center justify-center gap-1 w-16 bg-white rounded-lg border border-gray-700 px-1 py-2"
                 >
                   {m.logo ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -418,8 +409,20 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                   ) : (
                     <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
                   )}
+                  <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight">
+                    {m.label}
+                  </span>
                 </span>
               ))}
+            </div>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534] flex items-center gap-4">
+            <ShieldCheck className="w-10 h-10 text-green-500 shrink-0" />
+            <div>
+              <h4 className="font-bold text-sm">Pagos 100% Seguros</h4>
+              <p className="text-xs text-gray-400 mt-1">Tus datos están encriptados y protegidos mediante pasarelas verificadas.</p>
             </div>
           </div>
         </div>
