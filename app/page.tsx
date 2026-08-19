@@ -309,11 +309,9 @@ export default function Home() {
           </div>
           
           {/* Game On Block */}
-          <div className="relative py-6 px-10 xl:pl-20 xl:pr-12 flex items-center justify-center w-full xl:w-auto">
-            {/* Skewed background and border (Desktop) */}
-            <div className="absolute inset-y-0 -right-20 left-0 bg-[#240046] border-l-2 border-[#ff00ff] -skew-x-12 transform origin-bottom shadow-[inset_15px_0_30px_-10px_rgba(255,0,255,0.6)] hidden xl:block"></div>
-            {/* Unskewed background (Mobile) */}
-            <div className="absolute inset-0 bg-[#240046] border-t-2 border-[#ff00ff] shadow-[inset_0_15px_30px_-10px_rgba(255,0,255,0.6)] xl:hidden"></div>
+          <div className="relative py-4 px-10 flex items-center justify-center xl:mr-8 mb-4 xl:mb-0 w-[85%] xl:w-auto mx-auto xl:mx-0 group cursor-pointer">
+            {/* Skewed background and full border */}
+            <div className="absolute inset-0 bg-[#240046] border-[2px] border-[#ff00ff] -skew-x-[15deg] shadow-[0_0_15px_rgba(255,0,255,0.4),inset_0_0_15px_rgba(255,0,255,0.5)] rounded-lg group-hover:bg-[#ff00ff]/20 transition-colors"></div>
             
             <div className="relative z-10 flex items-center gap-4">
               <Gamepad2 className="w-9 h-9 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
