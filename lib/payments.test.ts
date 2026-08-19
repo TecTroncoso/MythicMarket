@@ -205,7 +205,48 @@ describe("buildComprobanteUrl", () => {
     expect(text).toContain("34600000000");
     expect(text).toContain("Juan Pérez");
     expect(text).toContain("Método: Bizum");
+    expect(text).toContain("Tel: 34600000000");
     expect(text).toContain("\n");
+  });
+
+  it("uses a custom contact label (Correo) for PayPal notices", () => {
+    const url = buildComprobanteUrl({
+      orderNumber: "MM-ABC12345",
+      productName: "257 Diamonds",
+      amountCents: 449,
+      currency: "EUR",
+      mlbbUserId: "12345678",
+      zoneId: "10012",
+      buyerPhone: "compra@ejemplo.com",
+      buyerName: "Test User",
+      methodLabel: "PayPal",
+      contactLabel: "Correo",
+    });
+
+    const text = decodeURIComponent(url.split("?text=")[1]);
+    expect(text).toContain("Correo: compra@ejemplo.com");
+    expect(text).not.toContain("Tel:");
+  });
+
+  it("omits Pedido and Referencia lines when there is no order number yet", () => {
+    const url = buildComprobanteUrl({
+      orderNumber: "",
+      productName: "172 Diamonds",
+      amountCents: 299,
+      currency: "EUR",
+      mlbbUserId: "12345678",
+      zoneId: "10012",
+      buyerPhone: "compra@ejemplo.com",
+      buyerName: "",
+      methodLabel: "PayPal",
+      contactLabel: "Correo",
+    });
+
+    const text = decodeURIComponent(url.split("?text=")[1]);
+    expect(text).not.toContain("Pedido:");
+    expect(text).not.toContain("Referencia:");
+    expect(text).toContain("Producto: 172 Diamonds");
+    expect(text).toContain("Método: PayPal");
   });
 });
 

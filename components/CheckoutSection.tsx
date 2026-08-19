@@ -228,6 +228,34 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
   const selectedProductData = PRODUCTS.find(p => p.id === selectedProduct);
 
+  // Manual PayPal (EU) notice: the buyer already paid through PayPal.Me and
+  // wants to alert the store's WhatsApp with the receipt details (method,
+  // amount and the PayPal email used). No order is created here — the notice
+  // is just the wa.me message with the data entered in the modal.
+  function handleNotifyPaypalReceipt() {
+    if (!selectedProduct || !selectedProductData) {
+      setPaymentError("Seleccioná un paquete primero.");
+      return;
+    }
+    if (!paymentDetail.trim()) {
+      setPaymentError("Ingresá el email de tu cuenta de PayPal.");
+      return;
+    }
+    const url = buildComprobanteUrl({
+      orderNumber: "",
+      productName: selectedProductData.name,
+      amountCents: Math.round(summaryPrice * 100),
+      currency: effectiveCfg.currency,
+      mlbbUserId: userId,
+      zoneId,
+      buyerPhone: paymentDetail.trim(),
+      buyerName: "",
+      methodLabel: "PayPal",
+      contactLabel: "Correo",
+    });
+    window.open(url, "_blank");
+  }
+
   // Region-aware price: the server context is authoritative when loaded;
   // otherwise fall back to the catalog price (latam/USD is the default).
   const shownPriceFor = (productId: string, fallback: number): number =>
@@ -470,6 +498,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           paymentError={paymentError}
           isPending={isPending}
           onConfirm={handleConfirmPayment}
+          onNotifyReceipt={handleNotifyPaypalReceipt}
           onClose={() => setIsModalOpen(false)}
         />
       )}

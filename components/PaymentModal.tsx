@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, Send, X } from 'lucide-react';
 import { BIZUM_RECIPIENT_DISPLAY, BIZUM_RECIPIENT_NAME, PAYPAL_ME_URL } from '@/lib/payments';
 import type { PaymentRegionConfig } from '@/lib/payments';
 
@@ -16,6 +16,7 @@ interface PaymentModalProps {
   paymentError: string | null;
   isPending: boolean;
   onConfirm: () => void;
+  onNotifyReceipt: () => void;
   onClose: () => void;
 }
 
@@ -30,6 +31,7 @@ export function PaymentModal({
   paymentError,
   isPending,
   onConfirm,
+  onNotifyReceipt,
   onClose,
 }: PaymentModalProps) {
   // Close the dialog with Escape. No focus trap required for this flow.
@@ -191,6 +193,17 @@ export function PaymentModal({
 
         {/* Footer */}
         <div className="mt-6 space-y-3">
+          {selectedMethod === "paypal" && cfg.region === "eu" && (
+            <button
+              type="button"
+              onClick={onNotifyReceipt}
+              disabled={isPending}
+              className="w-full text-sm font-semibold bg-[#1c2534] hover:bg-[#2a3441] border border-[#2a3441] text-gray-200 py-3 rounded-xl transition-colors flex justify-center items-center gap-2 disabled:opacity-70"
+            >
+              <Send className="w-4 h-4" />
+              Ya pagué, enviar comprobante por WhatsApp
+            </button>
+          )}
           <button
             type="button"
             onClick={onConfirm}

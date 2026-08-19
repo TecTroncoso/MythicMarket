@@ -276,22 +276,28 @@ export interface BizumComprobanteParams {
   buyerPhone: string;
   buyerName: string;
   methodLabel: string;
+  /** Label for the contact line: "Tel" (default) or "Correo" for PayPal. */
+  contactLabel?: string;
 }
 
 // wa.me deep link that pre-fills the payment receipt message to the store's
 // WhatsApp account. Multi-line neutral Spanish for legibility on the
 // recipient's phone; encodeURIComponent handles the line breaks (newlines
 // become %0A, which WhatsApp renders as line breaks) and the em-dash. The
-// message is method-agnostic: the method label comes from the params.
+// message is method-agnostic: the method label comes from the params. When
+// no order number exists yet (manual pre-confirmation notice), the Pedido and
+// Referencia lines are omitted.
 export function buildComprobanteUrl(params: BizumComprobanteParams): string {
+  const orderLines = params.orderNumber
+    ? `Pedido: ${params.orderNumber}\n` + `Referencia: ${params.orderNumber}\n`
+    : "";
   const text =
     `Comprobante MythicMarket\n` +
-    `Pedido: ${params.orderNumber}\n` +
+    orderLines +
     `Producto: ${params.productName} ${formatAmount(params.amountCents, params.currency)} (${params.currency})\n` +
-    `Referencia: ${params.orderNumber}\n` +
     `Pagador: ${params.buyerName}\n` +
     `MLBB: ${params.mlbbUserId}(${params.zoneId})\n` +
-    `Tel: ${params.buyerPhone}\n` +
+    `${params.contactLabel ?? "Tel"}: ${params.buyerPhone}\n` +
     `Método: ${params.methodLabel}`;
   return `https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=${encodeURIComponent(text)}`;
 }

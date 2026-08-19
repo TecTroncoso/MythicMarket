@@ -473,6 +473,45 @@ describe("CheckoutSection payment modal flow", () => {
     openSpy.mockRestore();
   });
 
+  it("sends the PayPal receipt notice to the store WhatsApp with the buyer email", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+    const locationSetter = stubLocation();
+
+    render(<CheckoutSection isLoggedIn={true} />);
+    await act(async () => {});
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
+    await act(async () => {});
+    fireEvent.click(screen.getByRole("button", { name: /PayPal/ }));
+    fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
+      target: { value: "compra@ejemplo.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Ya pagué, enviar comprobante por WhatsApp/i }));
+
+    await act(async () => {});
+
+    // No order is created by the notice button — only the wa.me message opens.
+    expect(processCheckout).not.toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    const url = openSpy.mock.calls[0][0] as string;
+    expect(url.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
+    const text = decodeURIComponent(url.split("?text=")[1]);
+    expect(text).toContain("172 Diamonds");
+    expect(text).toContain(formatAmount(299, "EUR"));
+    expect(text).toContain("Correo: compra@ejemplo.com");
+    expect(text).toContain("Método: PayPal");
+    expect(text).not.toContain("Pedido:");
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(locationSetter).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+    openSpy.mockRestore();
+  });
+
   it("opens the amount-prefilled PayPal.Me link on a successful paypal EU checkout", async () => {
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
     const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
