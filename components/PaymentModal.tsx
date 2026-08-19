@@ -110,25 +110,8 @@ export function PaymentModal({
           </div>
         </div>
 
-        {/* Accepted brands for this region */}
-        <div className="flex flex-wrap items-center gap-2 mb-5">
-          {cfg.methods.map((m) => (
-            <span
-              key={m.id}
-              className="inline-flex items-center justify-center h-9 min-w-[2.5rem] px-2 bg-white rounded-lg border border-gray-700"
-            >
-              {m.logo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.logo} alt={m.label} className="h-5 w-auto object-contain" />
-              ) : (
-                <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
-              )}
-            </span>
-          ))}
-        </div>
-
         {/* Payment methods */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           {cfg.methods.map((m) => {
             const isSelected = selectedMethod === m.id;
             return (
@@ -136,14 +119,24 @@ export function PaymentModal({
                 key={m.id}
                 type="button"
                 onClick={() => onSelectMethod(m.id)}
-                className={`border-2 rounded-xl p-4 text-left transition-all ${
+                className={`flex items-center gap-3 border-2 rounded-xl p-4 text-left transition-all ${
                   isSelected
                     ? 'border-[#ffaa00] bg-[#ffaa00]/10'
                     : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
                 }`}
               >
-                <span className="font-bold text-white">{m.label}</span>
-                <p className="text-xs text-gray-400 mt-1">{m.description}</p>
+                <span className="flex items-center justify-center w-12 h-9 bg-white rounded-lg border border-gray-700 shrink-0">
+                  {m.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.logo} alt={m.label} className="h-5 w-auto object-contain" />
+                  ) : (
+                    <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-bold text-white">{m.label}</span>
+                  <span className="block text-xs text-gray-400 mt-0.5">{m.description}</span>
+                </span>
               </button>
             );
           })}
