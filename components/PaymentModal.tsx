@@ -167,15 +167,22 @@ export function PaymentModal({
             )}
             {selectedMethod === "paypal" && cfg.region === "eu" && (
               <div className="bg-[#0a0f1a] border border-[#2a3441] rounded-lg p-3 text-sm text-gray-300">
-                Enviá el pago a:{" "}
-                <a
-                  href={PAYPAL_ME_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#ffaa00] underline font-mono"
-                >
-                  {PAYPAL_ME_URL.replace("https://www.", "")}
-                </a>
+                <div>
+                  Enviá el pago a:{" "}
+                  <a
+                    href={PAYPAL_ME_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#ffaa00] underline font-mono"
+                  >
+                    {PAYPAL_ME_URL.replace("https://www.", "")}
+                  </a>
+                </div>
+                <div className="mt-1.5 text-xs text-gray-400">
+                  Cuando PayPal te pregunte el tipo de pago, elegí{" "}
+                  <strong className="text-gray-300">&ldquo;Enviar a un amigo&rdquo;</strong> para
+                  evitar comisiones.
+                </div>
               </div>
             )}
           </div>
