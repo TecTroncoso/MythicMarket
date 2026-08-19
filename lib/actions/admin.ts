@@ -43,6 +43,39 @@ export async function setOrderStatus(
 }
 
 /**
+ * Deletes an order permanently. Admin-only; the panel asks for confirmation
+ * before submitting.
+ */
+export async function deleteOrder(
+  formData: FormData
+): Promise<{ error?: string; success?: boolean }> {
+  // 1. Verificar autorización de administrador
+  const session = await auth()
+  if (!session?.user || session.user.role !== "admin") {
+    return { error: "No autorizado." }
+  }
+
+  // 2. Extraer y validar el identificador de la orden
+  const orderId = formData.get("orderId")
+
+  if (typeof orderId !== "string" || orderId.length === 0) {
+    return { error: "Falta el identificador de la orden." }
+  }
+
+  // 3. Borrar la orden en la base de datos
+  try {
+    await db.delete(orders).where(eq(orders.id, orderId))
+  } catch (error) {
+    console.error("Error al borrar la orden:", error)
+    return { error: "No se pudo borrar la orden. Intentá de nuevo." }
+  }
+
+  // 4. Refrescar la vista del panel (los searchParams se conservan)
+  revalidatePath("/admin")
+  return { success: true }
+}
+
+/**
  * Search endpoint for the client admin panel: called after debounce, no page
  * reload. Filters are re-sanitized server-side so the client can never inject
  * invalid query fragments. The panel re-renders from the returned rows/stats.

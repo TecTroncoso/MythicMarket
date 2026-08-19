@@ -5,7 +5,7 @@ import { PackageOpen, Search, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/catalog';
 import { formatAmount, ORDER_STATUS_LABELS } from '@/lib/orders';
 import { PAYMENT_METHOD_LABELS, buildComprobanteUrl } from '@/lib/payments';
-import { searchAdminOrders, setOrderStatus } from '@/lib/actions/admin';
+import { searchAdminOrders, setOrderStatus, deleteOrder } from '@/lib/actions/admin';
 import type { AdminOrderFilters, AdminOrderRow, AdminStats } from '@/lib/admin-orders';
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
@@ -97,6 +97,22 @@ export function AdminOrdersPanel({
       return;
     }
     // Refetch authoritative data; the action's revalidatePath stays in place.
+    void load(filters);
+  }
+
+  async function handleDelete(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const orderNumber = form.getAttribute("data-order-number") ?? "";
+    if (!window.confirm(`¿Borrar la orden ${orderNumber}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+    const formData = new FormData(form);
+    const result = await deleteOrder(formData);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
     void load(filters);
   }
 
@@ -307,30 +323,39 @@ export function AdminOrdersPanel({
                             Enviar comprobante
                           </button>
                         )}
-                        {order.status === "pending" && (
-                          <>
-                            <form onSubmit={handleStatusChange}>
-                              <input type="hidden" name="orderId" value={order.id} />
-                              <input type="hidden" name="status" value="paid" />
-                              <button
-                                type="submit"
-                                className="text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/40 hover:bg-green-500/20 px-3 py-1.5 rounded-lg transition-colors"
-                              >
-                                Marcar pagada
-                              </button>
-                            </form>
-                            <form onSubmit={handleStatusChange}>
-                              <input type="hidden" name="orderId" value={order.id} />
-                              <input type="hidden" name="status" value="cancelled" />
-                              <button
-                                type="submit"
-                                className="text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/40 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors"
-                              >
-                                Cancelar
-                              </button>
-                            </form>
-                          </>
+                        {order.status !== "paid" && (
+                          <form onSubmit={handleStatusChange}>
+                            <input type="hidden" name="orderId" value={order.id} />
+                            <input type="hidden" name="status" value="paid" />
+                            <button
+                              type="submit"
+                              className="text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/40 hover:bg-green-500/20 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                              Aprobar
+                            </button>
+                          </form>
                         )}
+                        {order.status !== "cancelled" && (
+                          <form onSubmit={handleStatusChange}>
+                            <input type="hidden" name="orderId" value={order.id} />
+                            <input type="hidden" name="status" value="cancelled" />
+                            <button
+                              type="submit"
+                              className="text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/40 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </form>
+                        )}
+                        <form onSubmit={handleDelete} data-order-number={order.orderNumber}>
+                          <input type="hidden" name="orderId" value={order.id} />
+                          <button
+                            type="submit"
+                            className="text-xs font-semibold bg-gray-500/10 text-gray-400 border border-gray-500/40 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/40 px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            Borrar
+                          </button>
+                        </form>
                       </div>
                     </td>
                   </tr>
