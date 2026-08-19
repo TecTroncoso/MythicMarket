@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PackageOpen, Search, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/catalog';
 import { formatAmount, ORDER_STATUS_LABELS } from '@/lib/orders';
+import { PAYMENT_METHOD_LABELS } from '@/lib/payments';
 import { searchAdminOrders, updateOrderStatus } from '@/lib/actions/admin';
 import type { AdminOrderFilters, AdminOrderRow, AdminStats } from '@/lib/admin-orders';
 
@@ -219,7 +220,7 @@ export function AdminOrdersPanel({
           </div>
         ) : (
           <div className="bg-[#121824] rounded-2xl border border-[#1c2534] shadow-xl overflow-x-auto">
-            <table className="w-full text-sm min-w-[950px]">
+            <table className="w-full text-sm min-w-[1050px]">
               <thead>
                 <tr className="border-b border-[#1c2534] text-left text-xs uppercase tracking-wider text-gray-500">
                   <th className="px-4 py-3 font-semibold">Fecha</th>
@@ -228,6 +229,7 @@ export function AdminOrdersPanel({
                   <th className="px-4 py-3 font-semibold">Producto</th>
                   <th className="px-4 py-3 font-semibold">Cuenta MLBB</th>
                   <th className="px-4 py-3 font-semibold text-right">Importe</th>
+                  <th className="px-4 py-3 font-semibold">Pago</th>
                   <th className="px-4 py-3 font-semibold">Estado</th>
                   <th className="px-4 py-3 font-semibold">Acciones</th>
                 </tr>
@@ -252,6 +254,9 @@ export function AdminOrdersPanel({
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-[#ffaa00] whitespace-nowrap">
                       {formatAmount(order.amountCents, order.currency)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
+                      {PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span

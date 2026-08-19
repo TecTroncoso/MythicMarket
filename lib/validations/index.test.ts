@@ -122,8 +122,51 @@ describe("CheckoutSchema", () => {
       userId: "12345",
       zoneId: "123",
       productId: "1",
+      paymentMethod: "paypal",
+      paymentDetail: "ana@x.com",
     });
     expect(result.success).toBe(true);
+  });
+
+  it("accepts checkout data without paymentDetail", () => {
+    const result = CheckoutSchema.safeParse({
+      userId: "12345",
+      zoneId: "123",
+      productId: "1",
+      paymentMethod: "oxxo",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an empty paymentMethod", () => {
+    const result = CheckoutSchema.safeParse({
+      userId: "12345",
+      zoneId: "123",
+      productId: "1",
+      paymentMethod: "",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Debes seleccionar un método de pago.",
+      );
+    }
+  });
+
+  it("rejects paymentDetail longer than 60 characters", () => {
+    const result = CheckoutSchema.safeParse({
+      userId: "12345",
+      zoneId: "123",
+      productId: "1",
+      paymentMethod: "paypal",
+      paymentDetail: "x".repeat(61),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "El dato de pago es demasiado largo.",
+      );
+    }
   });
 
   it("rejects userId shorter than 5 digits", () => {
@@ -131,6 +174,7 @@ describe("CheckoutSchema", () => {
       userId: "1234",
       zoneId: "123",
       productId: "1",
+      paymentMethod: "paypal",
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -143,6 +187,7 @@ describe("CheckoutSchema", () => {
       userId: "1234a",
       zoneId: "123",
       productId: "1",
+      paymentMethod: "paypal",
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -157,6 +202,7 @@ describe("CheckoutSchema", () => {
       userId: "12345",
       zoneId: "1234567",
       productId: "1",
+      paymentMethod: "paypal",
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -169,6 +215,7 @@ describe("CheckoutSchema", () => {
       userId: "12345",
       zoneId: "123",
       productId: "",
+      paymentMethod: "paypal",
     });
     expect(result.success).toBe(false);
     if (!result.success) {

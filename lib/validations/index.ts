@@ -25,6 +25,8 @@ export const CheckoutSchema = z.object({
     .max(6, "El Zone ID es inválido")
     .regex(/^[0-9]+$/, "El Zone ID solo debe contener números"),
   productId: z.string().min(1, "Debes seleccionar un producto válido"),
+  paymentMethod: z.string().min(1, "Debes seleccionar un método de pago."),
+  paymentDetail: z.string().max(60, "El dato de pago es demasiado largo.").optional(),
 });
 
 export const MLBBLookupSchema = z.object({

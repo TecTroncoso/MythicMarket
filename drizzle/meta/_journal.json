@@ -15,6 +15,13 @@
       "when": 1787106053835,
       "tag": "0001_brown_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787151807135,
+      "tag": "0002_talented_paladin",
+      "breakpoints": true
     }
   ]
 }

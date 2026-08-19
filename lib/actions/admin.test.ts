@@ -127,6 +127,7 @@ const FIXTURE_ROW: AdminOrderRow = {
   zoneId: "10012",
   amountCents: 149,
   currency: "USD",
+  paymentMethod: "paypal",
   status: "pending",
   id: "o1",
 };

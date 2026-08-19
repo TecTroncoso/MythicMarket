@@ -3,8 +3,10 @@
 import React, { useState, useTransition, useEffect } from 'react';
 import Image from 'next/image';
 import { Info, ShoppingCart, ShieldCheck, ChevronRight, Loader2, Check } from 'lucide-react';
-import { processCheckout } from '@/lib/actions/checkout';
+import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
+import { PAYMENT_REGIONS, validatePaymentDetail } from '@/lib/payments';
+import type { PaymentRegion } from '@/lib/payments';
 
 export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   // Effective login state: the explicit prop when provided, otherwise resolved
@@ -15,6 +17,14 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Region-aware payment context: fetched once on mount from the server action.
+  // On failure the rest of the flow stays usable; only the payment step degrades.
+  const [context, setContext] = useState<Awaited<ReturnType<typeof getCheckoutContext>> | null>(null);
+  const [regionOverride, setRegionOverride] = useState<"auto" | "eu" | "latam">("auto");
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [paymentDetail, setPaymentDetail] = useState("");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   type NicknameStatus =
     | { kind: "idle" }
@@ -42,6 +52,28 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       return () => controller.abort();
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    // Load the server-derived region/pricing context once. Server actions do
+    // not need an AbortController; a failure just leaves the payment step
+    // in its fallback state.
+    getCheckoutContext().then(setContext).catch(() => {});
+  }, []);
+
+  // Changing the effective region resets the payment selection.
+  const effectiveRegion: PaymentRegion = regionOverride === "auto" ? (context?.region ?? "latam") : regionOverride;
+  const effectiveCfg = PAYMENT_REGIONS[effectiveRegion];
+
+  useEffect(() => {
+    // Reset the payment selection whenever the effective region changes.
+    // Defer setState out of the effect body to avoid cascading-render lint
+    // warning (same pattern as the nickname status reset above).
+    queueMicrotask(() => {
+      setSelectedMethod(null);
+      setPaymentDetail("");
+      setPaymentError(null);
+    });
+  }, [effectiveRegion]);
 
   useEffect(() => {
     const valid = /^\d{5,10}$/.test(userId) && /^\d{3,5}$/.test(zoneId);
@@ -88,6 +120,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
   const handleCheckout = () => {
     setCheckoutError(null);
+    setPaymentError(null);
     if (!loggedIn) {
       setCheckoutError('Debes iniciar sesión para realizar una compra.');
       return;
@@ -100,12 +133,27 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       setCheckoutError('Por favor selecciona un paquete.');
       return;
     }
+    if (!selectedMethod) {
+      setPaymentError('Seleccioná un método de pago.');
+      return;
+    }
+    const methodDef = effectiveCfg.methods.find((m) => m.id === selectedMethod);
+    if (methodDef?.needsField) {
+      const err = validatePaymentDetail(selectedMethod, paymentDetail);
+      if (err) {
+        setPaymentError(err);
+        return;
+      }
+    }
 
     startTransition(async () => {
       const formData = new FormData();
       formData.append("userId", userId);
       formData.append("zoneId", zoneId);
       formData.append("productId", selectedProduct);
+      formData.append("paymentMethod", selectedMethod);
+      formData.append("paymentDetail", paymentDetail.trim());
+      formData.append("paymentRegion", effectiveRegion);
 
       const res = await processCheckout(formData);
       
@@ -119,6 +167,13 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   };
 
   const selectedProductData = PRODUCTS.find(p => p.id === selectedProduct);
+
+  // Region-aware price: the server context is authoritative when loaded;
+  // otherwise fall back to the catalog price (latam/USD is the default).
+  const shownPriceFor = (productId: string, fallback: number): number =>
+    context ? (context.products.find((x) => x.id === productId)?.price ?? fallback) : fallback;
+  const summaryPrice = selectedProductData ? shownPriceFor(selectedProductData.id, selectedProductData.price) : 0;
+  const selectedMethodDef = effectiveCfg.methods.find((m) => m.id === selectedMethod) ?? null;
 
   return (
     <>
@@ -192,6 +247,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
             {PRODUCTS.map((prod) => {
               const isSelected = selectedProduct === prod.id;
+              const shownPrice = shownPriceFor(prod.id, prod.price);
               return (
                 <button
                   key={prod.id}
@@ -210,7 +266,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                   <Image src={prod.image} alt={`Recarga de ${prod.name}`} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16 mb-3 object-contain drop-shadow-lg" />
                   <span className="font-bold text-sm md:text-base text-center line-clamp-2 leading-tight mb-1">{prod.name}</span>
                   <span className={`text-xs font-medium ${isSelected ? 'text-[#ffaa00]' : 'text-gray-400'}`}>
-                    US${prod.price.toFixed(2)}
+                    {effectiveCfg.symbol}{shownPrice.toFixed(2)}
                   </span>
                   {isSelected && (
                     <div className="absolute inset-0 pointer-events-none ring-inset ring-2 ring-[#ffaa00] rounded-xl"></div>
@@ -219,6 +275,105 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               );
             })}
           </div>
+        </section>
+
+        {/* Step 3: Payment Method */}
+        <section className="bg-[#121824] rounded-2xl p-6 md:p-8 border border-[#1c2534] shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-1 h-full bg-[#ffaa00]"></div>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-10 h-10 rounded-full bg-[#1c2534] flex items-center justify-center font-bold text-[#ffaa00] text-lg border border-[#2a3441]">3</div>
+            <h3 className="text-2xl font-bold">Método de Pago</h3>
+          </div>
+
+          {/* Region selector */}
+          <div className="mb-6">
+            {context && regionOverride === "auto" ? (
+              <p className="text-sm text-gray-400 mb-3">
+                Detectamos tu región: {effectiveRegion === "eu" ? "Europa" : "Latinoamérica"}. Podés cambiarla:
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 mb-3">Elegí tu región:</p>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setRegionOverride("eu")}
+                className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+                  effectiveRegion === "eu"
+                    ? 'border-[#ffaa00] bg-[#ffaa00]/10'
+                    : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
+                }`}
+              >
+                Europa (€)
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegionOverride("latam")}
+                className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+                  effectiveRegion === "latam"
+                    ? 'border-[#ffaa00] bg-[#ffaa00]/10'
+                    : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
+                }`}
+              >
+                Latinoamérica (US$)
+              </button>
+              {regionOverride !== "auto" && (
+                <button
+                  type="button"
+                  onClick={() => setRegionOverride("auto")}
+                  className="text-xs text-gray-500 hover:text-gray-300 underline"
+                >
+                  Volver a automático
+                </button>
+              )}
+            </div>
+          </div>
+
+          {context === null ? (
+            <p className="text-sm text-gray-500">No pudimos cargar los métodos de pago.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {effectiveCfg.methods.map((m) => {
+                  const isSelected = selectedMethod === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedMethod(m.id);
+                        setPaymentError(null);
+                      }}
+                      className={`border-2 rounded-xl p-4 text-left transition-all ${
+                        isSelected
+                          ? 'border-[#ffaa00] bg-[#ffaa00]/10'
+                          : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
+                      }`}
+                    >
+                      <span className="font-bold text-white">{m.label}</span>
+                      <p className="text-xs text-gray-400 mt-1">{m.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedMethodDef?.needsField && (
+                <div className="mt-5 space-y-2">
+                  <label className="text-sm font-semibold text-gray-400 block">
+                    {selectedMethodDef.fieldLabel}
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentDetail}
+                    onChange={(e) => setPaymentDetail(e.target.value)}
+                    placeholder={selectedMethodDef.fieldPlaceholder ?? ""}
+                    className="w-full bg-[#0a0f1a] border border-[#2a3441] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#ffaa00] focus:ring-1 focus:ring-[#ffaa00] transition-all"
+                  />
+                  {paymentError && <p className="text-red-400 text-sm mt-2">{paymentError}</p>}
+                </div>
+              )}
+            </>
+          )}
         </section>
       </div>
 
@@ -244,7 +399,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <div className="space-y-2 py-4 border-y border-[#2a3441]">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Precio</span>
-                    <span className="font-medium">US${selectedProductData.price.toFixed(2)}</span>
+                    <span className="font-medium">{effectiveCfg.symbol}{summaryPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Tarifa de procesamiento</span>
@@ -254,8 +409,19 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
                 <div className="flex justify-between items-end pt-2 mb-4">
                   <span className="text-gray-300 font-medium">Total</span>
-                  <span className="text-3xl font-black text-[#ffaa00]">US${selectedProductData.price.toFixed(2)}</span>
+                  <span className="text-3xl font-black text-[#ffaa00]">{effectiveCfg.symbol}{summaryPrice.toFixed(2)}</span>
                 </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Método</span>
+                  <span className="font-medium">{selectedMethod ? (effectiveCfg.methods.find((m) => m.id === selectedMethod)?.label ?? selectedMethod) : "—"}</span>
+                </div>
+                {paymentDetail && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Detalle</span>
+                    <span className="font-medium">{paymentDetail}</span>
+                  </div>
+                )}
 
                 {checkoutError && (
                   <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-500 text-sm text-center font-medium">

@@ -57,6 +57,8 @@ export const orders = sqliteTable("orders", {
   productName: text("productName").notNull(),
   amountCents: integer("amountCents").notNull(),
   currency: text("currency").notNull().default("USD"),
+  paymentMethod: text("paymentMethod").notNull().default("paypal"),
+  paymentDetail: text("paymentDetail"),
   mlbbUserId: text("mlbbUserId").notNull(),
   zoneId: text("zoneId").notNull(),
   status: text("status", { enum: ["pending", "paid", "cancelled"] })

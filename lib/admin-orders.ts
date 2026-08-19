@@ -31,6 +31,7 @@ export interface AdminOrderRow {
   zoneId: string;
   amountCents: number;
   currency: string;
+  paymentMethod: string;
   status: string;
   id: string;
 }
@@ -142,6 +143,7 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
         zoneId: orders.zoneId,
         amountCents: orders.amountCents,
         currency: orders.currency,
+        paymentMethod: orders.paymentMethod,
         status: orders.status,
         id: orders.id,
       })
@@ -178,6 +180,7 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
       zoneId: row.zoneId,
       amountCents: row.amountCents,
       currency: row.currency,
+      paymentMethod: row.paymentMethod,
       status: row.status,
       id: row.id,
     })),

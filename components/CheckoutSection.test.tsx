@@ -8,6 +8,63 @@ import { render, screen, fireEvent, cleanup, act } from "@testing-library/react"
 // lookup tests do not exercise checkout submission, we stub the action entirely.
 vi.mock("@/lib/actions/checkout", () => ({
   processCheckout: vi.fn(async () => ({ success: false, message: "" })),
+  getCheckoutContext: vi.fn(async () => ({
+    region: "latam",
+    currency: "USD",
+    symbol: "US$",
+    methods: [
+      {
+        id: "mercadopago",
+        label: "Mercado Pago",
+        description: "Pagá con saldo, tarjeta o efectivo vía Mercado Pago.",
+        needsField: true,
+        fieldLabel: "Email de Mercado Pago",
+        fieldPlaceholder: "tucorreo@ejemplo.com",
+        pattern: "^\\S+@\\S+\\.\\S+$",
+        patternHint: "Ingresá un email válido.",
+      },
+      {
+        id: "paypal",
+        label: "PayPal",
+        description: "Pagá con tu cuenta de PayPal al instante.",
+        needsField: true,
+        fieldLabel: "Email de PayPal",
+        fieldPlaceholder: "tucorreo@ejemplo.com",
+        pattern: "^\\S+@\\S+\\.\\S+$",
+        patternHint: "Ingresá un email válido.",
+      },
+      {
+        id: "pix",
+        label: "Pix",
+        description: "Pagá al instante con el código Pix (Brasil).",
+        needsField: true,
+        fieldLabel: "Clave Pix",
+        fieldPlaceholder: "email, CPF o clave aleatoria",
+        pattern: "^\\S{1,40}$",
+        patternHint: "Ingresá una clave Pix válida.",
+      },
+      {
+        id: "oxxo",
+        label: "OXXO",
+        description: "Pagá en efectivo en cualquier tienda OXXO (México).",
+        needsField: false,
+        fieldLabel: null,
+        fieldPlaceholder: null,
+        pattern: null,
+        patternHint: null,
+      },
+    ],
+    products: [
+      { id: "1", name: "86 Diamonds", price: 1.49 },
+      { id: "2", name: "172 Diamonds", price: 2.99 },
+      { id: "3", name: "257 Diamonds", price: 4.49 },
+      { id: "4", name: "429 Diamonds", price: 7.49 },
+      { id: "5", name: "706 Diamonds", price: 11.99 },
+      { id: "6", name: "2195 Diamonds", price: 34.99 },
+      { id: "7", name: "Twilight Pass", price: 9.99 },
+      { id: "8", name: "Weekly Diamond Pass", price: 1.99 },
+    ],
+  })),
 }));
 
 import { CheckoutSection } from "./CheckoutSection";
@@ -187,9 +244,15 @@ describe("CheckoutSection MLBB lookup UX", () => {
     });
 
     render(<CheckoutSection isLoggedIn={true} />);
+    // Let the mocked getCheckoutContext resolve so the payment methods render.
+    await act(async () => {});
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Mercado Pago/ }));
+    fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
+      target: { value: "compra@ejemplo.com" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
 
     // Flush the async transition (mock resolves immediately, no timers needed).
