@@ -7,6 +7,7 @@ import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
 import { PAYMENT_REGIONS, validatePaymentDetail } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
+import { PaymentModal } from './PaymentModal';
 
 export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   // Effective login state: the explicit prop when provided, otherwise resolved
@@ -25,6 +26,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [paymentDetail, setPaymentDetail] = useState("");
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   type NicknameStatus =
     | { kind: "idle" }
@@ -133,6 +135,15 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       setCheckoutError('Por favor selecciona un paquete.');
       return;
     }
+    // Payment selection happens inside the modal; open it once the account
+    // data and product are valid.
+    setIsModalOpen(true);
+  };
+
+  // Runs inside the payment modal once the buyer confirms the method. The
+  // login/IDs/product checks already passed in handleCheckout.
+  const handleConfirmPayment = () => {
+    setPaymentError(null);
     if (!selectedMethod) {
       setPaymentError('Seleccioná un método de pago.');
       return;
@@ -145,6 +156,11 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         return;
       }
     }
+    if (!selectedProduct) {
+      setCheckoutError('Por favor selecciona un paquete.');
+      setIsModalOpen(false);
+      return;
+    }
 
     startTransition(async () => {
       const formData = new FormData();
@@ -156,9 +172,10 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       formData.append("paymentRegion", effectiveRegion);
 
       const res = await processCheckout(formData);
-      
+
       if (res.error) {
         setCheckoutError(res.error);
+        setIsModalOpen(false);
       } else if (res.success) {
         alert(res.message);
         window.location.href = "/dashboard";
@@ -173,7 +190,6 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const shownPriceFor = (productId: string, fallback: number): number =>
     context ? (context.products.find((x) => x.id === productId)?.price ?? fallback) : fallback;
   const summaryPrice = selectedProductData ? shownPriceFor(selectedProductData.id, selectedProductData.price) : 0;
-  const selectedMethodDef = effectiveCfg.methods.find((m) => m.id === selectedMethod) ?? null;
 
   return (
     <>
@@ -276,105 +292,6 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             })}
           </div>
         </section>
-
-        {/* Step 3: Payment Method */}
-        <section className="bg-[#121824] rounded-2xl p-6 md:p-8 border border-[#1c2534] shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-[#ffaa00]"></div>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-10 h-10 rounded-full bg-[#1c2534] flex items-center justify-center font-bold text-[#ffaa00] text-lg border border-[#2a3441]">3</div>
-            <h3 className="text-2xl font-bold">Método de Pago</h3>
-          </div>
-
-          {/* Region selector */}
-          <div className="mb-6">
-            {context && regionOverride === "auto" ? (
-              <p className="text-sm text-gray-400 mb-3">
-                Detectamos tu región: {effectiveRegion === "eu" ? "Europa" : "Latinoamérica"}. Podés cambiarla:
-              </p>
-            ) : (
-              <p className="text-sm text-gray-400 mb-3">Elegí tu región:</p>
-            )}
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setRegionOverride("eu")}
-                className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                  effectiveRegion === "eu"
-                    ? 'border-[#ffaa00] bg-[#ffaa00]/10'
-                    : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
-                }`}
-              >
-                Europa (€)
-              </button>
-              <button
-                type="button"
-                onClick={() => setRegionOverride("latam")}
-                className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                  effectiveRegion === "latam"
-                    ? 'border-[#ffaa00] bg-[#ffaa00]/10'
-                    : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
-                }`}
-              >
-                Latinoamérica (US$)
-              </button>
-              {regionOverride !== "auto" && (
-                <button
-                  type="button"
-                  onClick={() => setRegionOverride("auto")}
-                  className="text-xs text-gray-500 hover:text-gray-300 underline"
-                >
-                  Volver a automático
-                </button>
-              )}
-            </div>
-          </div>
-
-          {context === null ? (
-            <p className="text-sm text-gray-500">No pudimos cargar los métodos de pago.</p>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {effectiveCfg.methods.map((m) => {
-                  const isSelected = selectedMethod === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedMethod(m.id);
-                        setPaymentError(null);
-                      }}
-                      className={`border-2 rounded-xl p-4 text-left transition-all ${
-                        isSelected
-                          ? 'border-[#ffaa00] bg-[#ffaa00]/10'
-                          : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
-                      }`}
-                    >
-                      <span className="font-bold text-white">{m.label}</span>
-                      <p className="text-xs text-gray-400 mt-1">{m.description}</p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {selectedMethodDef?.needsField && (
-                <div className="mt-5 space-y-2">
-                  <label className="text-sm font-semibold text-gray-400 block">
-                    {selectedMethodDef.fieldLabel}
-                  </label>
-                  <input
-                    type="text"
-                    value={paymentDetail}
-                    onChange={(e) => setPaymentDetail(e.target.value)}
-                    placeholder={selectedMethodDef.fieldPlaceholder ?? ""}
-                    className="w-full bg-[#0a0f1a] border border-[#2a3441] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#ffaa00] focus:ring-1 focus:ring-[#ffaa00] transition-all"
-                  />
-                  {paymentError && <p className="text-red-400 text-sm mt-2">{paymentError}</p>}
-                </div>
-              )}
-            </>
-          )}
-        </section>
       </div>
 
       {/* Right Column: Checkout Sidebar */}
@@ -466,8 +383,42 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <p className="text-xs text-gray-400 mt-1">Tus datos están encriptados y protegidos mediante pasarelas verificadas.</p>
             </div>
           </div>
+
+          {/* Accepted Payment Methods */}
+          <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534]">
+            <h4 className="font-bold text-sm mb-3">Métodos aceptados</h4>
+            <div className="flex flex-wrap gap-2">
+              {['PayPal', 'Tarjeta', 'Mercado Pago', 'Pix', 'OXXO', 'Bizum', 'SEPA'].map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-[#2a3441] bg-[#0a0f1a] px-3 py-1 text-[11px] font-semibold text-gray-300"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+
+      {isModalOpen && (
+        <PaymentModal
+          cfg={effectiveCfg}
+          regionOverride={regionOverride}
+          onRegionChange={setRegionOverride}
+          selectedMethod={selectedMethod}
+          onSelectMethod={(id) => {
+            setSelectedMethod(id);
+            setPaymentError(null);
+          }}
+          paymentDetail={paymentDetail}
+          onPaymentDetailChange={setPaymentDetail}
+          paymentError={paymentError}
+          isPending={isPending}
+          onConfirm={handleConfirmPayment}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </>
   );
 }

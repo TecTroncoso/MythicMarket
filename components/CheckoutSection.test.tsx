@@ -68,6 +68,7 @@ vi.mock("@/lib/actions/checkout", () => ({
 }));
 
 import { CheckoutSection } from "./CheckoutSection";
+import { processCheckout } from "@/lib/actions/checkout";
 
 const SUCCESS_RESPONSE = (nickname: string, country: string) => ({
   ok: true,
@@ -86,6 +87,7 @@ const FAILURE_RESPONSE = {
 
 beforeEach(() => {
   vi.useFakeTimers();
+  vi.mocked(processCheckout).mockReset();
 });
 
 afterEach(() => {
@@ -111,6 +113,25 @@ async function typeValid() {
   fireEvent.change(userIdInput(), { target: { value: "12345678" } });
   fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
   await flush(300);
+}
+
+// Record the navigation target; getter keeps a valid absolute base URL so
+// next/image can still resolve image sources during render (happy-dom's
+// real Location.href setter rejects relative paths).
+function stubLocation() {
+  const locationSetter = vi.fn();
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: {
+      get href() {
+        return "http://localhost/";
+      },
+      set href(value: string) {
+        locationSetter(value);
+      },
+    },
+  });
+  return locationSetter;
 }
 
 describe("CheckoutSection MLBB lookup UX", () => {
@@ -216,29 +237,93 @@ describe("CheckoutSection MLBB lookup UX", () => {
     const warningButton = screen.getByRole("button", { name: /Comprar Ahora/i }) as HTMLButtonElement;
     expect(warningButton.disabled).toBe(false);
   });
+});
 
-  it("successful checkout alerts the confirmation and navigates to /dashboard", async () => {
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-    // Record the navigation target; getter keeps a valid absolute base URL so
-    // next/image can still resolve image sources during render (happy-dom's
-    // real Location.href setter rejects relative paths).
-    const locationSetter = vi.fn();
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: {
-        get href() {
-          return "http://localhost/";
-        },
-        set href(value: string) {
-          locationSetter(value);
-        },
-      },
+describe("CheckoutSection payment modal flow", () => {
+  it("does not open the modal when checkout validation fails", () => {
+    // Not logged in
+    const { unmount } = render(<CheckoutSection isLoggedIn={false} />);
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    expect(screen.getByText("Debes iniciar sesión para realizar una compra.")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Método de pago" })).not.toBeInTheDocument();
+    unmount();
+
+    // Missing User/Zone IDs
+    render(<CheckoutSection isLoggedIn={true} />);
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    expect(screen.getByText("Por favor ingresa tu User ID y Zone ID.")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Método de pago" })).not.toBeInTheDocument();
+  });
+
+  it("closes the modal via the X button, a backdrop click, and Escape", async () => {
+    render(<CheckoutSection isLoggedIn={true} />);
+    await act(async () => {});
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+
+    const openModal = () => {
+      fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+      return screen.getByRole("dialog", { name: "Método de pago" });
+    };
+    const expectModalClosed = () =>
+      expect(screen.queryByRole("dialog", { name: "Método de pago" })).not.toBeInTheDocument();
+
+    // X button
+    openModal();
+    fireEvent.click(screen.getByRole("button", { name: /Cerrar/i }));
+    expectModalClosed();
+
+    // Backdrop click
+    const dialog = openModal();
+    fireEvent.click(dialog.parentElement!);
+    expectModalClosed();
+
+    // Escape
+    openModal();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expectModalClosed();
+  });
+
+  it("shows an error when confirming without a selected method", async () => {
+    render(<CheckoutSection isLoggedIn={true} />);
+    await act(async () => {});
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
+
+    expect(screen.getByText("Seleccioná un método de pago.")).toBeInTheDocument();
+    expect(vi.mocked(processCheckout)).not.toHaveBeenCalled();
+  });
+
+  it("validates the payment detail before confirming", async () => {
+    render(<CheckoutSection isLoggedIn={true} />);
+    await act(async () => {});
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Mercado Pago/ }));
+    fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
+      target: { value: "no-es-un-email" },
     });
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
 
-    const { processCheckout } = await import("@/lib/actions/checkout");
+    expect(screen.getByText("Ingresá un email válido.")).toBeInTheDocument();
+    expect(vi.mocked(processCheckout)).not.toHaveBeenCalled();
+  });
+
+  it("confirms the payment inside the modal and submits the checkout", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const locationSetter = stubLocation();
+
     vi.mocked(processCheckout).mockResolvedValueOnce({
       success: true,
-      message: "¡Pedido confirmado! Tu número de orden es MM-TEST1234.",
+      message: "¡Pedido confirmado! Te enviamos el link de pago a tu email de Mercado Pago.",
       orderNumber: "MM-TEST1234",
       redirectUrl: "/dashboard",
     });
@@ -249,19 +334,66 @@ describe("CheckoutSection MLBB lookup UX", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+
+    expect(screen.getByRole("dialog", { name: "Método de pago" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Mercado Pago/ }));
     fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
       target: { value: "compra@ejemplo.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
 
     // Flush the async transition (mock resolves immediately, no timers needed).
     await act(async () => {});
 
+    expect(vi.mocked(processCheckout)).toHaveBeenCalledTimes(1);
+    const formData = vi.mocked(processCheckout).mock.calls[0][0];
+    expect(formData.get("userId")).toBe("12345678");
+    expect(formData.get("zoneId")).toBe("10012");
+    expect(formData.get("productId")).toBe("2");
+    expect(formData.get("paymentMethod")).toBe("mercadopago");
+    expect(formData.get("paymentDetail")).toBe("compra@ejemplo.com");
+    expect(formData.get("paymentRegion")).toBe("latam");
     expect(alertSpy).toHaveBeenCalledWith(
-      "¡Pedido confirmado! Tu número de orden es MM-TEST1234."
+      "¡Pedido confirmado! Te enviamos el link de pago a tu email de Mercado Pago."
     );
     expect(locationSetter).toHaveBeenCalledWith("/dashboard");
+    alertSpy.mockRestore();
+  });
+
+  it("submits the region chosen inside the modal", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    stubLocation();
+
+    vi.mocked(processCheckout).mockResolvedValueOnce({
+      success: true,
+      message: "¡Pedido confirmado! Te enviamos la solicitud a tu cuenta de PayPal.",
+      orderNumber: "MM-TEST1234",
+      redirectUrl: "/dashboard",
+    });
+
+    render(<CheckoutSection isLoggedIn={true} />);
+    await act(async () => {});
+    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
+    // Flush the microtask that resets the payment selection on region change.
+    await act(async () => {});
+    fireEvent.click(screen.getByRole("button", { name: /PayPal/ }));
+    fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
+      target: { value: "compra@ejemplo.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
+
+    await act(async () => {});
+
+    const formData = vi.mocked(processCheckout).mock.calls[0][0];
+    expect(formData.get("paymentMethod")).toBe("paypal");
+    expect(formData.get("paymentRegion")).toBe("eu");
+    expect(alertSpy).toHaveBeenCalled();
     alertSpy.mockRestore();
   });
 });
