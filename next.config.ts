@@ -34,13 +34,13 @@ const nextConfig: NextConfig = {
         // walking up ancestor directories for config files.
         config.watchOptions = {
           ignored: [
-            /node_modules/,
-            /\.git/,
-            /\.next/,
-            /pagefile\.sys/,
-            /hiberfil\.sys/,
-            /swapfile\.sys/,
-            /System Volume Information/,
+            "**/node_modules/**",
+            "**/.git/**",
+            "**/.next/**",
+            "**/pagefile.sys",
+            "**/hiberfil.sys",
+            "**/swapfile.sys",
+            "**/System Volume Information/**",
           ],
         };
       }

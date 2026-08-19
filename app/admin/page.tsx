@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { Navbar } from "@/components/Navbar";
 import { PRODUCTS } from "@/lib/catalog";
 import { getAdminOrders, sanitizeAdminFilters, type AdminOrderRow, type AdminStats } from "@/lib/admin-orders";
-import { setOrderStatus } from "@/lib/actions/admin";
+import { updateOrderStatus } from "@/lib/actions/admin";
 import { formatAmount, ORDER_STATUS_LABELS } from "@/lib/orders";
 
 export const metadata = {
@@ -94,11 +94,8 @@ export default async function AdminPage({
     console.error("[MythicMarket] /admin: falló la carga de órdenes", loadError);
   }
 
-  // Inline server action: form actions must resolve to void, while
-  // setOrderStatus returns a result object consumed by callers/tests.
-  const updateOrderStatus = async (formData: FormData): Promise<void> => {
-    await setOrderStatus(formData);
-  };
+  // Inline server actions can crash Server Component renders in Next 15.5;
+  // forms use the module-level updateOrderStatus from lib/actions/admin.ts.
 
   return (
     <main className="min-h-screen bg-[#0a0f1a] text-white font-sans pb-20">

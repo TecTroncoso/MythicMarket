@@ -39,3 +39,13 @@ export async function setOrderStatus(
   revalidatePath("/admin")
   return { success: true }
 }
+
+/**
+ * Module-level wrapper for form actions: React 19 form actions must resolve
+ * to void, while setOrderStatus returns a result object consumed by tests.
+ * Module-level (not inline) server actions avoid the inline-action
+ * serialization path that can crash Server Component renders in Next 15.5.
+ */
+export async function updateOrderStatus(formData: FormData): Promise<void> {
+  await setOrderStatus(formData)
+}
