@@ -202,6 +202,7 @@ describe("buildBizumComprobanteUrl", () => {
     expect(text).toContain(formatAmount(137, "EUR"));
     expect(text).toContain("34600000000");
     expect(text).toContain("Juan Pérez");
-    expect(text).toContain("Método: Bizum.");
+    expect(text).toContain("Método: Bizum");
+    expect(text).toContain("\n");
   });
 });

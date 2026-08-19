@@ -453,7 +453,8 @@ describe("CheckoutSection payment modal flow", () => {
     expect(text).toContain(formatAmount(299, "EUR"));
     expect(text).toContain("34600000000");
     expect(text).toContain("Juan Pérez");
-    expect(text).toContain("Método: Bizum.");
+    expect(text).toContain("Método: Bizum");
+    expect(text).toContain("\n");
     // No blocking alert on the Bizum path.
     expect(alertSpy).not.toHaveBeenCalled();
     expect(locationSetter).toHaveBeenCalledWith("/dashboard");

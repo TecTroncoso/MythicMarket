@@ -266,14 +266,18 @@ export interface BizumComprobanteParams {
 }
 
 // wa.me deep link that pre-fills the Bizum receipt message to the store's
-// WhatsApp account. Single-line neutral Spanish; encodeURIComponent handles
-// the em-dash and parentheses in the text.
+// WhatsApp account. Multi-line neutral Spanish for legibility on the
+// recipient's phone; encodeURIComponent handles the line breaks (newlines
+// become %0A, which WhatsApp renders as line breaks) and the em-dash.
 export function buildBizumComprobanteUrl(params: BizumComprobanteParams): string {
   const text =
-    `Comprobante MythicMarket — Pedido ${params.orderNumber}: ${params.productName} ` +
-    `${formatAmount(params.amountCents, params.currency)} (${params.currency}). ` +
-    `Referencia: ${params.orderNumber}. Pagador: ${params.buyerName} — MLBB ` +
-    `${params.mlbbUserId}(${params.zoneId}) — tel ${params.buyerPhone}. ` +
-    `Método: ${params.methodLabel}.`;
+    `Comprobante MythicMarket\n` +
+    `Pedido: ${params.orderNumber}\n` +
+    `Producto: ${params.productName} ${formatAmount(params.amountCents, params.currency)} (${params.currency})\n` +
+    `Referencia: ${params.orderNumber}\n` +
+    `Pagador: ${params.buyerName}\n` +
+    `MLBB: ${params.mlbbUserId}(${params.zoneId})\n` +
+    `Tel: ${params.buyerPhone}\n` +
+    `Método: ${params.methodLabel}`;
   return `https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=${encodeURIComponent(text)}`;
 }
