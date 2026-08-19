@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ShieldCheck, PackageOpen, Search, Filter } from "lucide-react";
+import { ShieldCheck, PackageOpen, Search, Filter, TriangleAlert } from "lucide-react";
 import { auth } from "@/auth";
 import { Navbar } from "@/components/Navbar";
 import { PRODUCTS } from "@/lib/catalog";
-import { getAdminOrders, sanitizeAdminFilters } from "@/lib/admin-orders";
+import { getAdminOrders, sanitizeAdminFilters, type AdminOrderRow, type AdminStats } from "@/lib/admin-orders";
 import { setOrderStatus } from "@/lib/actions/admin";
 import { formatAmount, ORDER_STATUS_LABELS } from "@/lib/orders";
 
@@ -44,6 +44,29 @@ function StatsCard({ label, value, valueClass = "text-white" }: StatsCardProps) 
   );
 }
 
+function LoadErrorPanel({ error }: { error: Error }) {
+  return (
+    <div className="bg-[#2a1215] border border-red-500/40 rounded-2xl p-6 shadow-xl">
+      <h2 className="text-lg font-black text-red-400 mb-1 flex items-center gap-2">
+        <TriangleAlert className="w-5 h-5" />
+        No se pudieron cargar las órdenes
+      </h2>
+      <p className="text-gray-400 text-sm mb-4">
+        Ocurrió un error al consultar la base de datos. Este es el detalle técnico del error:
+      </p>
+      <pre className="bg-[#0a0f1a] border border-red-500/20 rounded-lg p-4 text-xs text-red-300 overflow-x-auto whitespace-pre-wrap">
+        {error.message}
+        {"\n\n"}
+        {error.stack}
+      </pre>
+      <p className="text-gray-500 text-xs mt-4">
+        El error también quedó registrado en la consola del servidor con el prefijo{" "}
+        <code className="text-gray-400">[MythicMarket] /admin</code>.
+      </p>
+    </div>
+  );
+}
+
 export default async function AdminPage({
   searchParams,
 }: {
@@ -56,7 +79,20 @@ export default async function AdminPage({
 
   const sp = await searchParams;
   const filters = sanitizeAdminFilters(sp);
-  const { orders, stats } = await getAdminOrders(filters);
+
+  // Fail softly: any data-loading error renders inline with the real
+  // message + stack instead of dying with a generic production 500.
+  let orders: AdminOrderRow[] = [];
+  let stats: AdminStats | null = null;
+  let loadError: Error | null = null;
+  try {
+    const data = await getAdminOrders(filters);
+    orders = data.orders;
+    stats = data.stats;
+  } catch (err) {
+    loadError = err instanceof Error ? err : new Error(String(err));
+    console.error("[MythicMarket] /admin: falló la carga de órdenes", loadError);
+  }
 
   // Inline server action: form actions must resolve to void, while
   // setOrderStatus returns a result object consumed by callers/tests.
@@ -76,25 +112,29 @@ export default async function AdminPage({
           <p className="text-gray-400">Todas las compras de los usuarios</p>
         </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <StatsCard label="Órdenes" value={String(stats.totalCount)} />
-          <StatsCard
-            label="Monto total"
-            value={formatAmount(stats.totalAmountCents, "USD")}
-            valueClass="text-[#ffaa00]"
-          />
-          <StatsCard
-            label="Pendientes"
-            value={String(stats.pendingCount)}
-            valueClass="text-amber-400"
-          />
-          <StatsCard label="Pagadas" value={String(stats.paidCount)} valueClass="text-green-400" />
-          <StatsCard
-            label="Canceladas"
-            value={String(stats.cancelledCount)}
-            valueClass="text-red-400"
-          />
-        </div>
+        {loadError ? (
+          <LoadErrorPanel error={loadError} />
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+              <StatsCard label="Órdenes" value={String(stats?.totalCount ?? 0)} />
+              <StatsCard
+                label="Monto total"
+                value={formatAmount(stats?.totalAmountCents ?? 0, "USD")}
+                valueClass="text-[#ffaa00]"
+              />
+              <StatsCard
+                label="Pendientes"
+                value={String(stats?.pendingCount ?? 0)}
+                valueClass="text-amber-400"
+              />
+              <StatsCard label="Pagadas" value={String(stats?.paidCount ?? 0)} valueClass="text-green-400" />
+              <StatsCard
+                label="Canceladas"
+                value={String(stats?.cancelledCount ?? 0)}
+                valueClass="text-red-400"
+              />
+            </div>
 
         <form
           method="get"
@@ -249,6 +289,8 @@ export default async function AdminPage({
               </tbody>
             </table>
           </div>
+        )}
+          </>
         )}
       </div>
     </main>
