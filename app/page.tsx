@@ -97,8 +97,7 @@ export default function Home() {
           {/* Hero Banner */}
           <div className="relative rounded-2xl overflow-hidden border border-[#520099] shadow-[0_0_30px_rgba(82,0,153,0.3)] bg-[#0d001f] aspect-[21/9] flex items-center">
             <div className="absolute inset-0 bg-gradient-to-r from-[#060012] via-[#060012]/80 to-transparent z-10"></div>
-            {/* Background Gradient to emulate the neon cyber look */}
-            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#ff00ff]/30 via-[#060012] to-[#060012]"></div>
+            <Image src="/images/hero_banner.png" alt="Hero Banner" fill className="object-cover absolute inset-0 z-0 opacity-80" priority />
             
             <div className="relative z-20 p-8 md:p-12 max-w-lg">
               <h1 className="text-5xl md:text-7xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-[#00ffff] to-[#ff00ff] drop-shadow-[0_0_10px_rgba(255,0,255,0.5)] leading-tight mb-2">
@@ -156,8 +155,8 @@ export default function Home() {
               {/* Card 1 */}
               <div className="bg-[#13002b] border border-[#2a0050] rounded-xl overflow-hidden hover:border-[#ff00ff] hover:shadow-[0_0_15px_rgba(255,0,255,0.2)] transition-all group">
                 <div className="aspect-[3/4] bg-[#2a0050] relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] to-transparent z-10"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-blue-800 opacity-80"></div>
+                  <Image src="/images/soccer_cover.png" alt="FC 24" fill className="object-cover group-hover:scale-105 transition-transform duration-500 z-0" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] via-transparent to-transparent z-10"></div>
                   <div className="absolute bottom-2 left-2 z-20 flex gap-1">
                     <span className="bg-black/80 px-2 py-0.5 text-[10px] font-bold rounded">STEAM</span>
                   </div>
@@ -175,8 +174,8 @@ export default function Home() {
               {/* Card 2 */}
               <div className="bg-[#13002b] border border-[#2a0050] rounded-xl overflow-hidden hover:border-[#00ffff] hover:shadow-[0_0_15px_rgba(0,255,255,0.2)] transition-all group">
                 <div className="aspect-[3/4] bg-[#2a0050] relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] to-transparent z-10"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-red-900 opacity-80"></div>
+                  <Image src="/images/shooter_cover.png" alt="Call of Duty" fill className="object-cover group-hover:scale-105 transition-transform duration-500 z-0" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] via-transparent to-transparent z-10"></div>
                   <div className="absolute bottom-2 left-2 z-20 flex gap-1">
                     <span className="bg-black/80 px-2 py-0.5 text-[10px] font-bold rounded">STEAM</span>
                   </div>
@@ -194,8 +193,8 @@ export default function Home() {
               {/* Card 3 */}
               <div className="bg-[#13002b] border border-[#2a0050] rounded-xl overflow-hidden hover:border-[#ffaa00] hover:shadow-[0_0_15px_rgba(255,170,0,0.2)] transition-all group">
                 <div className="aspect-[3/4] bg-[#2a0050] relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] to-transparent z-10"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-700 to-black opacity-80"></div>
+                  <Image src="/images/fantasy_cover.png" alt="Elden Ring" fill className="object-cover group-hover:scale-105 transition-transform duration-500 z-0" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] via-transparent to-transparent z-10"></div>
                   <div className="absolute bottom-2 left-2 z-20 flex gap-1">
                     <span className="bg-black/80 px-2 py-0.5 text-[10px] font-bold rounded">STEAM</span>
                   </div>
@@ -213,13 +212,8 @@ export default function Home() {
               {/* Card 4 (MLBB Link disguised as a card) */}
               <Link href="/topup/mlbb" className="bg-[#13002b] border border-[#2a0050] rounded-xl overflow-hidden hover:border-[#00ffff] hover:shadow-[0_0_15px_rgba(0,255,255,0.2)] transition-all group block">
                 <div className="aspect-[3/4] bg-[#2a0050] relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] to-transparent z-10"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1a] to-blue-900 opacity-80 flex items-center justify-center p-4">
-                    <div className="text-center z-20">
-                      <div className="text-[#00ffff] font-black text-xl mb-1">MOBILE LEGENDS</div>
-                      <div className="text-xs text-gray-300">DIAMONDS & PASS</div>
-                    </div>
-                  </div>
+                  <Image src="/mlbb-logo.png" alt="Mobile Legends" fill className="object-contain group-hover:scale-105 transition-transform duration-500 z-0 p-8" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#13002b] via-transparent to-[#13002b]/50 z-10"></div>
                   <div className="absolute bottom-2 left-2 z-20 flex gap-1">
                     <span className="bg-black/80 px-2 py-0.5 text-[10px] font-bold rounded text-[#00ffff]">TOP-UP</span>
                   </div>
