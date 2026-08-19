@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { generateOrderNumber, formatAmount, ORDER_STATUS_LABELS } from "./orders";
+import { generateOrderNumber } from "./order-number";
+import { formatAmount, ORDER_STATUS_LABELS } from "./orders";
 
 describe("generateOrderNumber", () => {
   it("returns MM-XXXXXXXX with only unambiguous characters", () => {

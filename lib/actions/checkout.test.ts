@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Mocks: declared at module top so Vitest hoists them before imports.
-// lib/orders (generateOrderNumber) stays REAL — it only needs node:crypto.
+// lib/order-number (generateOrderNumber) stays REAL — it only needs node:crypto.
 // ---------------------------------------------------------------------------
 
 const mockAuth = vi.fn();

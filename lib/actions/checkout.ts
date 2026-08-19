@@ -5,7 +5,7 @@ import { CheckoutSchema } from "@/lib/validations"
 import { checkoutRateLimiter } from "@/lib/rate-limit"
 import { db } from "@/lib/db"
 import { orders } from "@/lib/db/schema"
-import { generateOrderNumber } from "@/lib/orders"
+import { generateOrderNumber } from "@/lib/order-number"
 import { getProductById } from "@/lib/catalog"
 
 export async function processCheckout(formData: FormData) {

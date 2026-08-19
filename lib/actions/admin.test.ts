@@ -21,9 +21,16 @@ vi.mock("next/cache", () => ({
   revalidatePath: mockRevalidatePath,
 }));
 
+const mockGetAdminOrders = vi.fn();
+vi.mock("@/lib/admin-orders", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/admin-orders")>()),
+  getAdminOrders: mockGetAdminOrders,
+}));
+
 // Import after mocks (dynamic, so the factory variables are initialized).
-const { setOrderStatus } = await import("./admin");
+const { setOrderStatus, searchAdminOrders } = await import("./admin");
 import { orders } from "@/lib/db/schema";
+import type { AdminOrderRow } from "@/lib/admin-orders";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -43,9 +50,13 @@ const setSession = (user: { id: string; email: string; role: "user" | "admin" } 
 beforeEach(() => {
   vi.clearAllMocks();
   mockAuth.mockResolvedValue({
-    user: { id: "u1", email: "admin@x.com", name: "Admin", role: "admin" },
+    user: { id: "a1", role: "admin", email: "admin@x.com" },
   });
   mockWhere.mockResolvedValue(undefined);
+  mockGetAdminOrders.mockResolvedValue({
+    orders: [],
+    stats: { totalCount: 0, totalAmountCents: 0, pendingCount: 0, paidCount: 0, cancelledCount: 0 },
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -100,5 +111,81 @@ describe("setOrderStatus()", () => {
     const result = await setOrderStatus(validForm());
     expect(result).toEqual({ error: "No se pudo actualizar la orden. Intentá de nuevo." });
     expect(mockUpdate).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchAdminOrders()
+// ---------------------------------------------------------------------------
+
+const FIXTURE_ROW: AdminOrderRow = {
+  orderNumber: "MM-ABC23456",
+  createdAt: new Date("2026-08-18T12:00:00Z"),
+  email: "ana@x.com",
+  productName: "86 Diamonds",
+  mlbbUserId: "12345678",
+  zoneId: "10012",
+  amountCents: 149,
+  currency: "USD",
+  status: "pending",
+  id: "o1",
+};
+
+describe("searchAdminOrders()", () => {
+  it("rejects when there is no session without calling getAdminOrders", async () => {
+    mockAuth.mockResolvedValueOnce(null);
+    await expect(searchAdminOrders({})).rejects.toThrow("No autorizado.");
+    expect(mockGetAdminOrders).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-admin users without calling getAdminOrders", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "u1", role: "user" } });
+    await expect(searchAdminOrders({})).rejects.toThrow("No autorizado.");
+    expect(mockGetAdminOrders).not.toHaveBeenCalled();
+  });
+
+  it("re-sanitizes dirty filters before querying", async () => {
+    const result = await searchAdminOrders({
+      q: "  a%b_c  ",
+      status: "shipped",
+      productId: "999",
+    });
+
+    expect(result).toEqual({
+      orders: [],
+      stats: { totalCount: 0, totalAmountCents: 0, pendingCount: 0, paidCount: 0, cancelledCount: 0 },
+    });
+    expect(mockGetAdminOrders).toHaveBeenCalledTimes(1);
+    expect(mockGetAdminOrders).toHaveBeenCalledWith({ q: "abc" });
+  });
+
+  it("passes valid filters through unchanged", async () => {
+    const valid = {
+      status: "paid",
+      from: "2026-08-18",
+      to: "2026-08-20",
+      productId: "1",
+      q: "ana@x.com",
+    };
+
+    await searchAdminOrders(valid);
+    expect(mockGetAdminOrders).toHaveBeenCalledWith(valid);
+  });
+
+  it("returns the query result unchanged", async () => {
+    const fixture = {
+      orders: [FIXTURE_ROW],
+      stats: {
+        totalCount: 42,
+        totalAmountCents: 1148,
+        pendingCount: 3,
+        paidCount: 38,
+        cancelledCount: 1,
+      },
+    };
+    mockGetAdminOrders.mockResolvedValueOnce(fixture);
+
+    const result = await searchAdminOrders({});
+    expect(result).toEqual(fixture);
   });
 });
