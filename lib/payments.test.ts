@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  BINANCE_RECIPIENT_ADDRESS,
   BIZUM_RECIPIENT_PHONE,
   buildComprobanteUrl,
   buildPaypalMeUrl,
@@ -77,7 +78,7 @@ describe("getMethod / regionForMethod", () => {
     expect(getMethod("revolut")?.label).toBe("Revolut");
     expect(getMethod("mercadopago")?.label).toBe("Mercado Pago");
     expect(getMethod("pix")?.label).toBe("Pix");
-    expect(getMethod("oxxo")?.label).toBe("OXXO");
+    expect(getMethod("binance")?.label).toBe("Binance (USDT)");
   });
 
   it("returns undefined for unknown methods", () => {
@@ -89,7 +90,7 @@ describe("getMethod / regionForMethod", () => {
     expect(regionForMethod("sepa")).toBe("eu");
     expect(regionForMethod("mercadopago")).toBe("latam");
     expect(regionForMethod("pix")).toBe("latam");
-    expect(regionForMethod("oxxo")).toBe("latam");
+    expect(regionForMethod("binance")).toBe("latam");
     expect(regionForMethod("bitcoin")).toBeUndefined();
   });
 });
@@ -133,8 +134,9 @@ describe("validatePaymentDetail", () => {
     expect(validatePaymentDetail("pix", "")).toBe("Ingresá una clave Pix válida.");
   });
 
-  it("accepts oxxo without any detail (no field needed)", () => {
-    expect(validatePaymentDetail("oxxo", "")).toBeNull();
+  it("validates binance emails like other email-based methods", () => {
+    expect(validatePaymentDetail("binance", "compra@ejemplo.com")).toBeNull();
+    expect(validatePaymentDetail("binance", "")).toBe("Ingresá un email válido.");
   });
 
   it("trims the detail before validating", () => {
@@ -150,7 +152,7 @@ describe("PAYMENT_METHOD_LABELS", () => {
     expect(PAYMENT_METHOD_LABELS.n26).toBe("N26");
     expect(PAYMENT_METHOD_LABELS.revolut).toBe("Revolut");
     expect(PAYMENT_METHOD_LABELS.mercadopago).toBe("Mercado Pago");
-    expect(PAYMENT_METHOD_LABELS.oxxo).toBe("OXXO");
+    expect(PAYMENT_METHOD_LABELS.binance).toBe("Binance (USDT)");
   });
 });
 
@@ -161,9 +163,11 @@ describe("paymentInstructions", () => {
     expect(out).toContain("IBAN");
   });
 
-  it("embeds the formatted amount in oxxo instructions", () => {
-    const out = paymentInstructions("oxxo", 9.19, "USD", "MM-XYZ78901");
+  it("embeds the recipient address and amount in binance instructions", () => {
+    const out = paymentInstructions("binance", 9.19, "USD", "MM-XYZ78901");
     expect(out).toContain(formatAmount(919, "USD"));
+    expect(out).toContain("USDT (TRC20)");
+    expect(out).toContain(BINANCE_RECIPIENT_ADDRESS);
     expect(out).toContain("MM-XYZ78901");
   });
 

@@ -160,12 +160,16 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
         pattern: "^\\S{1,40}$",
         patternHint: "Ingresá una clave Pix válida.",
       },
-      {
-        id: "oxxo",
-        logo: "/logos/oxxo.svg",
-        label: "OXXO",
-        description: "Pagá en efectivo en cualquier tienda OXXO (México).",
-        needsField: false,
+{
+        id: "binance",
+        logo: "/logos/binance.svg",
+        label: "Binance (USDT)",
+        description: "Pagá con USDT (TRC20) desde tu cuenta de Binance.",
+        needsField: true,
+        fieldLabel: "Email de Binance",
+        fieldPlaceholder: "tucorreo@ejemplo.com",
+        pattern: "^\\S+@\\S+\\.\\S+$",
+        patternHint: "Ingresá un email válido.",
       },
     ],
   },
@@ -211,7 +215,7 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   revolut: "Revolut",
   mercadopago: "Mercado Pago",
   pix: "Pix",
-  oxxo: "OXXO",
+  binance: "Binance (USDT)",
 };
 
 export function paymentInstructions(
@@ -238,8 +242,8 @@ export function paymentInstructions(
       return "Te enviamos el link de pago a tu email de Mercado Pago.";
     case "pix":
       return `Escaneá el código Pix que te mostramos al confirmar (referencia ${orderNumber}).`;
-    case "oxxo":
-      return `Pagá ${formatted} en efectivo en OXXO mostrando la referencia ${orderNumber}.`;
+    case "binance":
+      return `Transferí ${formatted} USDT (TRC20) a la dirección ${BINANCE_RECIPIENT_ADDRESS} usando la referencia ${orderNumber}.`;
     default:
       return "Procesaremos tu pago por el método seleccionado.";
   }
@@ -252,6 +256,10 @@ export const BIZUM_RECIPIENT_PHONE = "34642084779";
 export const BIZUM_RECIPIENT_DISPLAY = "+34 642 08 47 79";
 // Display name of the receiving Bizum account.
 export const BIZUM_RECIPIENT_NAME = "M00NYX";
+
+// Binance USDT receiving address (the store's TRC20 wallet). FAKE PLACEHOLDER:
+// replace with the real address before launch.
+export const BINANCE_RECIPIENT_ADDRESS = "TXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
 // PayPal.Me receiving account (the store's PayPal alias for EU buyers). Shown
 // as the payment destination in the checkout modal; the buyer pays manually.

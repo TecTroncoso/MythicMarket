@@ -267,19 +267,19 @@ describe("processCheckout() payment methods", () => {
     }
   });
 
-  it("stores null paymentDetail for methods without a field (oxxo)", async () => {
+  it("stores the trimmed payment detail for binance (email field)", async () => {
     vi.useFakeTimers();
     try {
       const promise = processCheckout(
-        fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "oxxo", paymentDetail: "   ", paymentRegion: "latam" })
+        fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "binance", paymentDetail: "  compra@ejemplo.com  ", paymentRegion: "latam" })
       );
       await vi.advanceTimersByTimeAsync(1500);
       await promise;
 
       const rowArg = mockInsertValues.mock.calls[0]?.[0];
       expect(rowArg).toMatchObject({
-        paymentMethod: "oxxo",
-        paymentDetail: null,
+        paymentMethod: "binance",
+        paymentDetail: "compra@ejemplo.com",
         currency: "USD",
         amountCents: 149,
       });
@@ -317,7 +317,7 @@ describe("getCheckoutContext()", () => {
     expect(ctx.region).toBe("latam");
     expect(ctx.currency).toBe("USD");
     expect(ctx.symbol).toBe("US$");
-    expect(ctx.methods.map((m) => m.id)).toEqual(["mercadopago", "paypal", "pix", "oxxo"]);
+    expect(ctx.methods.map((m) => m.id)).toEqual(["mercadopago", "paypal", "pix", "binance"]);
     expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.49);
   });
 });
