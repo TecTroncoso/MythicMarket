@@ -43,16 +43,6 @@ export async function setOrderStatus(
 }
 
 /**
- * Module-level wrapper for form actions: React 19 form actions must resolve
- * to void, while setOrderStatus returns a result object consumed by tests.
- * Module-level (not inline) server actions avoid the inline-action
- * serialization path that can crash Server Component renders in Next 15.5.
- */
-export async function updateOrderStatus(formData: FormData): Promise<void> {
-  await setOrderStatus(formData)
-}
-
-/**
  * Search endpoint for the client admin panel: called after debounce, no page
  * reload. Filters are re-sanitized server-side so the client can never inject
  * invalid query fragments. The panel re-renders from the returned rows/stats.

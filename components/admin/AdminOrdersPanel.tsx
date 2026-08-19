@@ -5,7 +5,7 @@ import { PackageOpen, Search, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/catalog';
 import { formatAmount, ORDER_STATUS_LABELS } from '@/lib/orders';
 import { PAYMENT_METHOD_LABELS } from '@/lib/payments';
-import { searchAdminOrders, updateOrderStatus } from '@/lib/actions/admin';
+import { searchAdminOrders, setOrderStatus } from '@/lib/actions/admin';
 import type { AdminOrderFilters, AdminOrderRow, AdminStats } from '@/lib/admin-orders';
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
@@ -90,7 +90,12 @@ export function AdminOrdersPanel({
   async function handleStatusChange(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    await updateOrderStatus(formData);
+    const result = await setOrderStatus(formData);
+    if (result?.error) {
+      // Surface the failure instead of swallowing it silently.
+      setError(result.error);
+      return;
+    }
     // Refetch authoritative data; the action's revalidatePath stays in place.
     void load(filters);
   }
