@@ -314,10 +314,10 @@ export default function Home() {
             <div className="absolute inset-0 bg-[#240046] border-[2px] border-[#ff00ff] -skew-x-[15deg] shadow-[0_0_15px_rgba(255,0,255,0.4),inset_0_0_15px_rgba(255,0,255,0.5)] rounded-lg"></div>
             
             <div className="relative z-10 flex items-center gap-4">
-              <Gamepad2 className="w-9 h-9 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+              <Gamepad2 className="w-9 h-9 text-[#ff00ff] drop-shadow-[0_0_8px_rgba(255,0,255,0.8)]" />
               <div>
-                <div className="font-black text-xl italic text-transparent bg-clip-text bg-gradient-to-r from-[#ff00ff] to-white drop-shadow-[0_0_5px_rgba(255,0,255,0.8)] tracking-wide leading-tight">GAME ON.</div>
-                <div className="text-[11px] font-black text-gray-300 tracking-wider">AHORRA MÁS.</div>
+                <div className="font-black text-xl italic text-[#ff00ff] drop-shadow-[0_0_8px_rgba(255,0,255,0.8)] tracking-wide leading-tight">GAME ON.</div>
+                <div className="text-[11px] font-black text-white tracking-wider">AHORRA MÁS.</div>
               </div>
             </div>
           </div>
