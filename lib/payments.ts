@@ -253,6 +253,19 @@ export const BIZUM_RECIPIENT_DISPLAY = "+34 642 08 47 79";
 // Display name of the receiving Bizum account.
 export const BIZUM_RECIPIENT_NAME = "M00NYX";
 
+// PayPal.Me receiving account (the store's PayPal alias for EU buyers). Shown
+// as the payment destination in the checkout modal; the buyer pays manually.
+export const PAYPAL_ME_ALIAS = "mandyml09";
+export const PAYPAL_ME_URL = `https://www.paypal.me/${PAYPAL_ME_ALIAS}`;
+
+// Amount-prefilled PayPal.Me link for the actual purchased object: the buyer
+// pays the store manually with the real total pre-filled by the URL path
+// segment (2 decimals, dot-separated). The amount is never hardcoded — it is
+// the current product price passed by the caller.
+export function buildPaypalMeUrl(amountEur: number): string {
+  return `${PAYPAL_ME_URL}/${amountEur.toFixed(2)}`;
+}
+
 export interface BizumComprobanteParams {
   orderNumber: string;
   productName: string;
@@ -265,11 +278,12 @@ export interface BizumComprobanteParams {
   methodLabel: string;
 }
 
-// wa.me deep link that pre-fills the Bizum receipt message to the store's
+// wa.me deep link that pre-fills the payment receipt message to the store's
 // WhatsApp account. Multi-line neutral Spanish for legibility on the
 // recipient's phone; encodeURIComponent handles the line breaks (newlines
-// become %0A, which WhatsApp renders as line breaks) and the em-dash.
-export function buildBizumComprobanteUrl(params: BizumComprobanteParams): string {
+// become %0A, which WhatsApp renders as line breaks) and the em-dash. The
+// message is method-agnostic: the method label comes from the params.
+export function buildComprobanteUrl(params: BizumComprobanteParams): string {
   const text =
     `Comprobante MythicMarket\n` +
     `Pedido: ${params.orderNumber}\n` +

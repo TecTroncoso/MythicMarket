@@ -1,11 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
   BIZUM_RECIPIENT_PHONE,
-  buildBizumComprobanteUrl,
+  buildComprobanteUrl,
+  buildPaypalMeUrl,
   convertPrice,
   countryToRegion,
   getMethod,
   PAYMENT_METHOD_LABELS,
+  PAYPAL_ME_URL,
   PAYMENT_REGIONS,
   paymentInstructions,
   regionForMethod,
@@ -181,9 +183,9 @@ describe("paymentInstructions", () => {
   });
 });
 
-describe("buildBizumComprobanteUrl", () => {
+describe("buildComprobanteUrl", () => {
   it("builds a wa.me link whose decoded text carries the receipt details", () => {
-    const url = buildBizumComprobanteUrl({
+    const url = buildComprobanteUrl({
       orderNumber: "MM-ABC12345",
       productName: "172 Diamonds",
       amountCents: 137,
@@ -204,5 +206,19 @@ describe("buildBizumComprobanteUrl", () => {
     expect(text).toContain("Juan Pérez");
     expect(text).toContain("Método: Bizum");
     expect(text).toContain("\n");
+  });
+});
+
+describe("PayPal.Me", () => {
+  it("exposes the store's PayPal.Me alias in the base URL", () => {
+    expect(PAYPAL_ME_URL).toContain("mandyml09");
+  });
+
+  it("builds an amount-prefilled PayPal.Me link with the passed 2-decimal amount", () => {
+    expect(buildPaypalMeUrl(4.49)).toBe("https://www.paypal.me/mandyml09/4.49");
+  });
+
+  it("uses the caller-provided amount, never a hardcoded one", () => {
+    expect(buildPaypalMeUrl(9.99)).toBe("https://www.paypal.me/mandyml09/9.99");
   });
 });

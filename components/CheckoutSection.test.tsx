@@ -366,6 +366,8 @@ describe("CheckoutSection payment modal flow", () => {
 
   it("submits the region chosen inside the modal", async () => {
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    // PayPal (EU) opens the amount-prefilled PayPal.Me window instead of alerting.
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
     stubLocation();
 
     vi.mocked(processCheckout).mockResolvedValueOnce({
@@ -397,8 +399,17 @@ describe("CheckoutSection payment modal flow", () => {
     const formData = vi.mocked(processCheckout).mock.calls[0][0];
     expect(formData.get("paymentMethod")).toBe("paypal");
     expect(formData.get("paymentRegion")).toBe("eu");
-    expect(alertSpy).toHaveBeenCalled();
+    // The amount-prefilled PayPal.Me window (real product price, 2.99 for the
+    // selected 172 Diamonds) replaces the success alert.
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy).toHaveBeenNthCalledWith(
+      1,
+      "https://www.paypal.me/mandyml09/2.99",
+      "_blank"
+    );
+    expect(alertSpy).not.toHaveBeenCalled();
     alertSpy.mockRestore();
+    openSpy.mockRestore();
   });
 
   it("opens the Bizum receipt wa.me link on a successful bizum checkout", async () => {
@@ -456,6 +467,60 @@ describe("CheckoutSection payment modal flow", () => {
     expect(text).toContain("Método: Bizum");
     expect(text).toContain("\n");
     // No blocking alert on the Bizum path.
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(locationSetter).toHaveBeenCalledWith("/dashboard");
+    alertSpy.mockRestore();
+    openSpy.mockRestore();
+  });
+
+  it("opens the amount-prefilled PayPal.Me link on a successful paypal EU checkout", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+    const locationSetter = stubLocation();
+
+    vi.mocked(processCheckout).mockResolvedValueOnce({
+      success: true,
+      message: "¡Pedido confirmado! Te enviamos la solicitud a tu cuenta de PayPal.",
+      orderNumber: "MM-TEST1234",
+      redirectUrl: "/dashboard",
+      buyerName: "Test User",
+    });
+
+    render(<CheckoutSection isLoggedIn={true} />);
+    // Let the mocked getCheckoutContext resolve so the payment methods render.
+    await act(async () => {});
+    // 257 Diamonds maps to 4.49 in the mocked context products.
+    fireEvent.click(screen.getByText(/257 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
+    // Flush the microtask that resets the payment selection on region change.
+    await act(async () => {});
+    fireEvent.click(screen.getByRole("button", { name: /PayPal/ }));
+    fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
+      target: { value: "compra@ejemplo.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
+
+    // Flush the async transition (mock resolves immediately, no timers needed).
+    await act(async () => {});
+
+    const formData = vi.mocked(processCheckout).mock.calls[0][0];
+    expect(formData.get("paymentMethod")).toBe("paypal");
+    expect(formData.get("paymentRegion")).toBe("eu");
+    expect(formData.get("productId")).toBe("3");
+    // The final PayPal.Me link opens during the click gesture with the REAL
+    // price of the purchased object pre-filled (4.49 = 257 Diamonds in the
+    // mocked context, not a hardcoded amount); no blank window is used.
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy).toHaveBeenNthCalledWith(
+      1,
+      "https://www.paypal.me/mandyml09/4.49",
+      "_blank"
+    );
+    // No blocking alert on the PayPal (EU) path.
     expect(alertSpy).not.toHaveBeenCalled();
     expect(locationSetter).toHaveBeenCalledWith("/dashboard");
     alertSpy.mockRestore();

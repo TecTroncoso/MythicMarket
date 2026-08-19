@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Info, ShoppingCart, ShieldCheck, ChevronRight, Loader2, Check } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
-import { PAYMENT_REGIONS, validatePaymentDetail, buildBizumComprobanteUrl } from '@/lib/payments';
+import { PAYMENT_REGIONS, validatePaymentDetail, buildComprobanteUrl, buildPaypalMeUrl, PAYPAL_ME_URL } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
 import { PaymentModal } from './PaymentModal';
 
@@ -162,7 +162,19 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       return;
     }
 
+    // PayPal (EU) is a manual transfer via PayPal.Me: the payment page opens with
+// the REAL price of the purchased object pre-filled (never a hardcoded amount)
+// and is the feedback itself, so no success alert is shown on that path.
+    const isPaypalEu = selectedMethod === "paypal" && effectiveRegion === "eu";
+
     startTransition(async () => {
+      // PayPal.Me must be opened while the click gesture is still active
+      // (browsers block popups opened after an await). The amount-prefilled
+      // link uses the actual product price — no blank window needed. A zero
+      // total (no product) falls back to the bare PayPal.Me URL.
+      if (isPaypalEu) {
+        window.open(summaryPrice > 0 ? buildPaypalMeUrl(summaryPrice) : PAYPAL_ME_URL, "_blank");
+      }
       // Browsers block popups opened after an await, so the Bizum receipt
       // window must be opened while the click gesture is still active. It is
       // pointed at the wa.me URL once the order is confirmed (or left blank
@@ -186,7 +198,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         if (selectedMethod === "bizum") {
           // Bizum buyers must send the receipt (payment screenshot) to the
           // store's WhatsApp before the order can be marked paid.
-          const url = buildBizumComprobanteUrl({
+          const url = buildComprobanteUrl({
             orderNumber: res.orderNumber ?? "",
             productName: selectedProductData?.name ?? "",
             amountCents: Math.round(summaryPrice * 100),
@@ -204,7 +216,9 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             // blocked by the browser, but it is the best effort available).
             window.open(url, "_blank");
           }
-        } else {
+        } else if (!isPaypalEu) {
+          // PayPal (EU) skips the alert: the PayPal.Me window opened before
+          // the request is the payment feedback.
           alert(res.message);
         }
         window.location.href = "/dashboard";

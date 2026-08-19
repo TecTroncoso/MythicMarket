@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PackageOpen, Search, Loader2 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/catalog';
 import { formatAmount, ORDER_STATUS_LABELS } from '@/lib/orders';
-import { PAYMENT_METHOD_LABELS, buildBizumComprobanteUrl } from '@/lib/payments';
+import { PAYMENT_METHOD_LABELS, buildComprobanteUrl } from '@/lib/payments';
 import { searchAdminOrders, setOrderStatus } from '@/lib/actions/admin';
 import type { AdminOrderFilters, AdminOrderRow, AdminStats } from '@/lib/admin-orders';
 
@@ -100,13 +100,14 @@ export function AdminOrdersPanel({
     void load(filters);
   }
 
-  // Opens the wa.me link that pre-fills the Bizum receipt message to the
-  // store's WhatsApp. The admin query does not select paymentDetail, so the
-  // buyer phone falls back to empty until the row includes it.
-  function openBizumComprobante(order: AdminOrderRow) {
+  // Opens the wa.me link that pre-fills the payment receipt message to the
+  // store's WhatsApp for Bizum and PayPal orders. The admin query does not
+  // select paymentDetail, so the buyer phone falls back to empty until the row
+  // includes it.
+  function openComprobante(order: AdminOrderRow) {
     const withDetail = order as AdminOrderRow & { paymentDetail?: string };
     window.open(
-      buildBizumComprobanteUrl({
+      buildComprobanteUrl({
         orderNumber: order.orderNumber,
         productName: order.productName,
         amountCents: order.amountCents,
@@ -116,7 +117,7 @@ export function AdminOrdersPanel({
         buyerPhone: withDetail.paymentDetail ?? "",
         // The admin query does not expose the buyer name; keep it empty.
         buyerName: "",
-        methodLabel: "Bizum",
+        methodLabel: order.paymentMethod === "paypal" ? "PayPal" : "Bizum",
       }),
       "_blank"
     );
@@ -297,10 +298,10 @@ export function AdminOrdersPanel({
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex gap-2">
-                        {order.paymentMethod === "bizum" && (
+                        {(order.paymentMethod === "bizum" || order.paymentMethod === "paypal") && (
                           <button
                             type="button"
-                            onClick={() => openBizumComprobante(order)}
+                            onClick={() => openComprobante(order)}
                             className="text-xs font-semibold bg-transparent text-gray-300 border border-[#2a3441] hover:bg-[#1c2534] px-3 py-1.5 rounded-lg transition-colors"
                           >
                             Enviar comprobante

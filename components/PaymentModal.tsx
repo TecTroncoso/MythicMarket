@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { Loader2, X } from 'lucide-react';
-import { BIZUM_RECIPIENT_DISPLAY, BIZUM_RECIPIENT_NAME } from '@/lib/payments';
+import { BIZUM_RECIPIENT_DISPLAY, BIZUM_RECIPIENT_NAME, PAYPAL_ME_URL } from '@/lib/payments';
 import type { PaymentRegionConfig } from '@/lib/payments';
 
 interface PaymentModalProps {
@@ -163,6 +163,19 @@ export function PaymentModal({
                 Enviá el Bizum a:{" "}
                 <strong className="text-white font-mono">{BIZUM_RECIPIENT_DISPLAY}</strong>{" "}
                 ({BIZUM_RECIPIENT_NAME})
+              </div>
+            )}
+            {selectedMethod === "paypal" && cfg.region === "eu" && (
+              <div className="bg-[#0a0f1a] border border-[#2a3441] rounded-lg p-3 text-sm text-gray-300">
+                Enviá el pago a:{" "}
+                <a
+                  href={PAYPAL_ME_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#ffaa00] underline font-mono"
+                >
+                  {PAYPAL_ME_URL.replace("https://www.", "")}
+                </a>
               </div>
             )}
           </div>
