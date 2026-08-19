@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Heart, ShoppingCart, User, Zap, ShieldCheck, ChevronRight, Gamepad2, Crosshair, Map, Swords, Trophy, Ghost } from 'lucide-react';
+import { Search, Heart, ShoppingCart, User, Zap, ShieldCheck, ChevronRight, Gamepad2, Crosshair, Map, Swords, Trophy, Ghost, Menu } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -15,10 +15,11 @@ export default function Home() {
       </div>
 
       {/* Custom Neon Navbar */}
-      <nav className="border-b border-[#2a0050] bg-[#090014]/60 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+      <nav className="border-b border-[#2a0050] bg-[#090014]/90 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-6">
+          {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff00ff] to-[#00ffff] flex items-center justify-center p-0.5 shadow-[0_0_15px_rgba(255,0,255,0.4)]">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff00ff] via-[#00ffff] to-[#ffaa00] flex items-center justify-center p-0.5 shadow-[0_0_15px_rgba(255,0,255,0.4)]">
               <div className="w-full h-full bg-[#060012] rounded-full flex items-center justify-center">
                 <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ff00ff] to-[#00ffff] text-xl">M</span>
               </div>
@@ -26,7 +27,8 @@ export default function Home() {
             <span className="text-xl font-black tracking-tight text-white hidden sm:block">Mythic<span className="text-[#ff00ff]">Market</span></span>
           </div>
 
-          <div className="flex-1 max-w-2xl hidden md:flex items-center bg-[#13002b] border border-[#3d0075] rounded-full px-4 py-2 focus-within:border-[#ff00ff] focus-within:shadow-[0_0_10px_rgba(255,0,255,0.3)] transition-all">
+          {/* Search Bar */}
+          <div className="flex-1 max-w-2xl hidden md:flex items-center bg-[#13002b] border border-[#3d0075] rounded-xl px-4 py-2.5 focus-within:border-[#ff00ff] focus-within:shadow-[0_0_10px_rgba(255,0,255,0.3)] transition-all">
             <Search className="w-5 h-5 text-gray-400" />
             <input 
               type="text" 
@@ -35,6 +37,7 @@ export default function Home() {
             />
           </div>
 
+          {/* Actions */}
           <div className="flex items-center gap-4 sm:gap-6">
             <button className="hidden sm:flex items-center gap-2 text-gray-300 hover:text-[#ff00ff] transition-colors">
               <Heart className="w-5 h-5" />
@@ -44,19 +47,31 @@ export default function Home() {
               <ShoppingCart className="w-5 h-5" />
               <span className="text-sm font-medium">Carrito</span>
             </button>
-            <Link href="/login" className="flex items-center gap-2 bg-[#13002b] border border-[#3d0075] hover:border-[#ff00ff] hover:shadow-[0_0_10px_rgba(255,0,255,0.2)] px-3 py-1.5 rounded-full transition-all">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#ff00ff] to-[#00ffff] flex items-center justify-center">
-                <User className="w-4 h-4 text-black" />
+            <Link href="/login" className="flex items-center gap-3 pl-2 transition-all group">
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-bold text-gray-300 group-hover:text-white transition-colors">GamerX</span>
+                <span className="text-[10px] text-gray-500">Nivel 42</span>
               </div>
-              <span className="text-sm font-bold">Entrar</span>
+              <div className="relative">
+                <div className="w-9 h-9 rounded-full bg-[#13002b] border border-[#3d0075] overflow-hidden flex items-center justify-center shadow-[0_0_10px_rgba(255,0,255,0.2)] group-hover:border-[#00ffff] transition-colors">
+                  <User className="w-5 h-5 text-gray-400 group-hover:text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-[#060012] border border-[#00ffff] text-[#00ffff] text-[8px] font-black px-1 py-0.5 rounded shadow-[0_0_5px_#00ffff]">
+                  42
+                </div>
+              </div>
             </Link>
           </div>
         </div>
         
         {/* Categories Bar */}
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-6 overflow-x-auto no-scrollbar border-t border-[#1a0033]">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 overflow-x-auto no-scrollbar border-t border-[#1a0033]">
+          <button className="flex items-center gap-2 text-white font-bold text-sm py-3 border-b-2 border-transparent hover:text-[#ff00ff] hover:border-[#ff00ff] transition-all whitespace-nowrap">
+            <Menu className="w-5 h-5" />
+            Todas las categorías
+          </button>
           {['Juegos', 'Tarjetas regalo', 'Suscripciones', 'DLC', 'Software', 'Gaming Points', 'Top-Up', 'Ofertas'].map((cat, i) => (
-            <Link key={cat} href={cat === 'Top-Up' ? '/topup/mlbb' : '#'} className={`whitespace-nowrap text-sm font-medium transition-colors ${cat === 'Ofertas' ? 'text-[#ff00ff] font-bold drop-shadow-[0_0_8px_rgba(255,0,255,0.6)]' : 'text-gray-300 hover:text-white'}`}>
+            <Link key={cat} href={cat === 'Top-Up' ? '/topup/mlbb' : '#'} className={`whitespace-nowrap text-sm font-medium py-3 transition-colors ${cat === 'Ofertas' ? 'text-[#ff00ff] font-bold drop-shadow-[0_0_8px_rgba(255,0,255,0.6)]' : 'text-gray-300 hover:text-white'}`}>
               {cat}
             </Link>
           ))}
@@ -104,9 +119,9 @@ export default function Home() {
         <div className="lg:col-span-3 space-y-8">
           
           {/* Hero Banner */}
-          <div className="relative rounded-2xl overflow-hidden border border-[#520099] shadow-[0_0_30px_rgba(82,0,153,0.3)] bg-[#0d001f] aspect-[21/9] flex items-center">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#060012] via-[#060012]/80 to-transparent z-10"></div>
-            <Image src="/images/hero_banner.png" alt="Hero Banner" fill className="object-cover absolute inset-0 z-0 opacity-80" priority />
+          <div className="relative rounded-2xl overflow-hidden border border-[#520099] shadow-[0_0_30px_rgba(82,0,153,0.3)] bg-[#060012] min-h-[400px] flex items-center">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#060012] via-[#060012]/60 to-transparent z-10 pointer-events-none"></div>
+            <Image src="/images/hero_banner.png" alt="Hero Banner" fill className="object-contain object-right absolute inset-0 z-0 opacity-90" priority />
             
             <div className="relative z-20 p-8 md:p-12 max-w-lg">
               <h1 className="text-5xl md:text-7xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-[#00ffff] to-[#ff00ff] drop-shadow-[0_0_10px_rgba(255,0,255,0.5)] leading-tight mb-2">
