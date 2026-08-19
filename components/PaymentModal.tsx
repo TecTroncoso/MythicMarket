@@ -110,6 +110,23 @@ export function PaymentModal({
           </div>
         </div>
 
+        {/* Accepted brands for this region */}
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          {cfg.methods.map((m) => (
+            <span
+              key={m.id}
+              className="inline-flex items-center justify-center h-9 min-w-[2.5rem] px-2 bg-white rounded-lg border border-gray-700"
+            >
+              {m.logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={m.logo} alt={m.label} className="h-5 w-auto object-contain" />
+              ) : (
+                <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
+              )}
+            </span>
+          ))}
+        </div>
+
         {/* Payment methods */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {cfg.methods.map((m) => {

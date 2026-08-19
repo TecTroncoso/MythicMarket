@@ -16,6 +16,8 @@ export interface PaymentMethodDef {
   fieldPlaceholder?: string;
   pattern?: string;
   patternHint?: string;
+  /** Local SVG asset path shown as a brand badge in the checkout UI. */
+  logo?: string;
 }
 
 export interface PaymentRegionConfig {
@@ -54,6 +56,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
     methods: [
       {
         id: "paypal",
+        logo: "/logos/paypal.svg",
         label: "PayPal",
         description: "Pagá con tu cuenta de PayPal al instante.",
         needsField: true,
@@ -64,6 +67,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "card",
+        logo: "/logos/card.svg",
         label: "Tarjeta de crédito/débito",
         description: "Pagá con tarjeta VISA o Mastercard.",
         needsField: true,
@@ -74,6 +78,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "sepa",
+        logo: "/logos/sepa.svg",
         label: "SEPA (Transferencia)",
         description: "Transferí el importe a nuestra cuenta IBAN europea.",
         needsField: true,
@@ -84,6 +89,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "bizum",
+        logo: "/logos/bizum.svg",
         label: "Bizum",
         description: "Pagá desde la app de tu banco con tu teléfono.",
         needsField: true,
@@ -94,6 +100,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "n26",
+        logo: "/logos/n26.svg",
         label: "N26",
         description: "Transferí desde tu cuenta N26 al instante.",
         needsField: true,
@@ -104,6 +111,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "revolut",
+        logo: "/logos/revolut.svg",
         label: "Revolut",
         description: "Transferí desde tu cuenta Revolut al instante.",
         needsField: true,
@@ -121,6 +129,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
     methods: [
       {
         id: "mercadopago",
+        logo: "/logos/mercadopago.svg",
         label: "Mercado Pago",
         description: "Pagá con saldo, tarjeta o efectivo vía Mercado Pago.",
         needsField: true,
@@ -131,6 +140,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "paypal",
+        logo: "/logos/paypal.svg",
         label: "PayPal",
         description: "Pagá con tu cuenta de PayPal al instante.",
         needsField: true,
@@ -141,6 +151,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "pix",
+        logo: "/logos/pix.svg",
         label: "Pix",
         description: "Pagá al instante con el código Pix (Brasil).",
         needsField: true,
@@ -151,6 +162,7 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
       {
         id: "oxxo",
+        logo: "/logos/oxxo.svg",
         label: "OXXO",
         description: "Pagá en efectivo en cualquier tienda OXXO (México).",
         needsField: false,

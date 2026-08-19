@@ -6,11 +6,23 @@ import {
   countryToRegion,
   getMethod,
   PAYMENT_METHOD_LABELS,
+  PAYMENT_REGIONS,
   paymentInstructions,
   regionForMethod,
   validatePaymentDetail,
 } from "./payments";
 import { formatAmount } from "./orders";
+
+describe("payment method logos", () => {
+  it("every method in every region declares a local logo asset", () => {
+    for (const region of Object.values(PAYMENT_REGIONS)) {
+      for (const method of region.methods) {
+        expect(method.logo, `${region.region}/${method.id}`).toBeTruthy();
+        expect(method.logo, `${region.region}/${method.id}`).toMatch(/^\/logos\/.+\.svg$/);
+      }
+    }
+  });
+});
 
 describe("countryToRegion", () => {
   it("maps EU country codes to 'eu'", () => {
