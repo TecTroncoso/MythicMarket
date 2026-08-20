@@ -27,7 +27,7 @@ export default function Home() {
   return (
     <main className="min-h-screen text-white font-sans selection:bg-[#ff00ff] selection:text-white pb-20 overflow-x-hidden relative">
       {/* 🌑 AMBIENT NEON BACKGROUND */}
-      <!-- Fondo fijo detrás de todo (z-index -1), con overlay y grid sutil -->
+      {/* Fondo fijo detrás de todo (z-index -1), con overlay y grid sutil */}
       <div className="fixed inset-0 z-[-1]">
         <img
           src="/images/bg.jpg"
