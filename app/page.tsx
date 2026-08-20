@@ -6,9 +6,11 @@ export default function Home() {
   return (
     <main className="min-h-screen text-white font-sans selection:bg-[#ff00ff] selection:text-white pb-20 overflow-x-hidden relative">
       {/* Ambient Neon Background */}
-      <div className="fixed inset-0 z-[-1]">
-        <Image src="/images/bg.jpg" alt="Background" fill className="object-cover object-center" priority />
-        {/* Dark overlay to keep content readable */}
+      <div
+        className="fixed inset-0 z-[-1]"
+        style={{ backgroundImage: "url('/images/bg.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}
+      >
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-[#060012]/75"></div>
         {/* Neon Grid */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
