@@ -118,7 +118,7 @@ export default function Home() {
         </div>
 
         {/* Main Content Area */}
-        <div className="lg:col-span-3 space-y-8">
+        <div className="lg:col-span-3 space-y-8 z-1">
           
           {/* Hero Banner */}
           <div className="relative rounded-2xl overflow-hidden border border-[#520099] shadow-[0_0_30px_rgba(82,0,153,0.3)] bg-[#060012] min-h-[400px] flex items-center">
