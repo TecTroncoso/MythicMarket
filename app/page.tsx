@@ -311,7 +311,7 @@ export default function Home() {
           {/* Game On Block */}
           <div className="relative py-4 px-10 flex items-center justify-center xl:mr-8 mb-4 xl:mb-0 w-[85%] xl:w-auto mx-auto xl:mx-0">
             {/* Skewed background and full border */}
-            <div className="absolute inset-0 bg-[#240046] border-[2px] border-[#ff00ff] -skew-x-[15deg] shadow-[0_0_15px_rgba(255,0,255,0.4),inset_0_0_15px_rgba(255,0,255,0.5)] rounded-lg"></div>
+            <div className="absolute inset-0 bg-[#020020] border-[2px] border-[#ff00ff] -skew-x-[15deg] shadow-[0_0_15px_rgba(255,0,255,0.4),inset_0_0_15px_rgba(255,0,255,0.5)] rounded-lg"></div>
             
             <div className="relative z-10 flex items-center gap-4">
               <Gamepad2 className="w-9 h-9 text-[#A51BEF]" />
