@@ -6,12 +6,12 @@ export default function Home() {
   return (
     <main className="min-h-screen text-white font-sans selection:bg-[#ff00ff] selection:text-white pb-20 overflow-x-hidden relative">
       {/* Ambient Neon Background */}
-      <div className="fixed inset-0 z-[-1] bg-[#090014]">
-        {/* Abstract Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        {/* Glowing Orbs */}
-        <div className="absolute top-[-10%] left-1/4 w-[50vw] h-[50vw] bg-[#ff00ff] opacity-15 rounded-full blur-[150px] mix-blend-screen pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] right-1/4 w-[50vw] h-[50vw] bg-[#00ffff] opacity-10 rounded-full blur-[150px] mix-blend-screen pointer-events-none"></div>
+      <div className="fixed inset-0 z-[-1]">
+        <Image src="/images/bg.jpg" alt="Background" fill className="object-cover object-center" priority />
+        {/* Dark overlay to keep content readable */}
+        <div className="absolute inset-0 bg-[#060012]/75"></div>
+        {/* Neon Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,0,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       </div>
 
       {/* Custom Neon Navbar */}
